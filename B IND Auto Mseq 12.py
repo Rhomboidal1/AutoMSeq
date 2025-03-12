@@ -815,7 +815,7 @@ def NavigateToFolder(browsefolderswindow, path, log_file=None):
         return NavigateToFolder_Win10(browsefolderswindow, path, log_file)
 
 def NavigateToFolder_Win11(browsefolderswindow, path, log_file=None):
-    """Enhanced navigation function with multiple fallbacks for Windows 11"""
+    """Enhanced navigation function for Windows 11 using Tab navigation and targeted element finding"""
     from pywinauto.keyboard import send_keys
     from time import sleep as TimeSleep
     import os
@@ -824,254 +824,197 @@ def NavigateToFolder_Win11(browsefolderswindow, path, log_file=None):
         enhanced_logging(f"Using Windows 11 navigation for path: {path}", log_file)
         enhanced_logging(f"Target folder name: {os.path.basename(path)}", log_file)
     
-    # -----------------------------------------------------------------------
-    # ATTEMPT 1: Direct keyboard shortcuts to select address bar and enter path
-    # -----------------------------------------------------------------------
-    keyboard_shortcuts = [
-        ('%d', "Alt+D shortcut"),  # Standard address bar shortcut
-        ('^l', "Ctrl+L shortcut"),  # Another common address bar shortcut
-        ('%1', "Alt+1 shortcut"),   # Works in some dialogs
-        ('{F4}', "F4 key")          # Works in some dropdown/combobox UIs
-    ]
-    
-    for shortcut, description in keyboard_shortcuts:
-        try:
-            if log_file:
-                enhanced_logging(f"Trying {description}", log_file)
-                
-            browsefolderswindow.set_focus()
-            TimeSleep(0.5)
-            send_keys(shortcut)
-            TimeSleep(0.5)
-            send_keys('^a')  # Select all text
-            TimeSleep(0.3)
-            send_keys(path)  # Type full path
-            TimeSleep(0.5)
-            send_keys('{ENTER}')
-            TimeSleep(2.0)  # Allow time for navigation
-            
-            # Check if OK button is enabled (successful navigation)
-            try:
-                ok_button = browsefolderswindow.child_window(title="OK", class_name="Button")
-                if ok_button.exists() and ok_button.is_enabled():
-                    if log_file:
-                        enhanced_logging(f"Navigation successful with {description}", log_file)
-                    return True
-            except:
-                pass
-        except Exception as e:
-            if log_file:
-                enhanced_logging(f"{description} failed: {str(e)}", log_file)
-    
-    # -----------------------------------------------------------------------
-    # ATTEMPT 2: Find and use edit or combo box controls directly
-    # -----------------------------------------------------------------------
-    if log_file:
-        enhanced_logging("Looking for edit or combo controls", log_file)
+    # Step 1: Reset focus and navigate to the tree view
+    try:
+        browsefolderswindow.set_focus()
+        TimeSleep(0.5)
         
-    try:
-        # Try to find edit controls
-        edit_controls = browsefolderswindow.children(class_name="Edit")
+        # Use Tab to move focus to the tree view (usually takes 2-3 tabs)
         if log_file:
-            enhanced_logging(f"Found {len(edit_controls)} Edit controls", log_file)
-            
-        # Try each edit control
-        for i, edit in enumerate(edit_controls):
-            try:
-                if log_file:
-                    enhanced_logging(f"Trying Edit control #{i+1}", log_file)
-                edit.set_focus()
-                edit.click_input()
-                TimeSleep(0.3)
-                send_keys('^a')  # Select all
-                TimeSleep(0.3)
-                send_keys(path)  # Type path
-                TimeSleep(0.5)
-                send_keys('{ENTER}')
-                TimeSleep(2.0)
-                
-                # Check if navigation successful
-                ok_button = browsefolderswindow.child_window(title="OK", class_name="Button")
-                if ok_button.exists() and ok_button.is_enabled():
-                    if log_file:
-                        enhanced_logging(f"Edit control #{i+1} navigation successful", log_file)
-                    return True
-            except Exception as e:
-                if log_file:
-                    enhanced_logging(f"Edit control #{i+1} failed: {str(e)}", log_file)
-                    
-        # Try combo box controls
-        combo_controls = browsefolderswindow.children(class_name="ComboBox")
+            enhanced_logging("Resetting focus and navigating to tree view with Tab", log_file)
+        
+        # Start with Tab to ensure we're in the dialog controls
+        send_keys('{TAB}')
+        TimeSleep(0.3)
+        send_keys('{TAB}')
+        TimeSleep(0.3)
+        
+        # One more Tab to be sure we've reached the tree view
+        send_keys('{TAB}')
+        TimeSleep(0.5)
+        
         if log_file:
-            enhanced_logging(f"Found {len(combo_controls)} ComboBox controls", log_file)
-            
-        for i, combo in enumerate(combo_controls):
-            try:
-                if log_file:
-                    enhanced_logging(f"Trying ComboBox control #{i+1}", log_file)
-                combo.set_focus()
-                combo.click_input()
-                TimeSleep(0.3)
-                send_keys('^a')  # Select all
-                TimeSleep(0.3)
-                send_keys(path)  # Type path
-                TimeSleep(0.5)
-                send_keys('{ENTER}')
-                TimeSleep(2.0)
-                
-                # Check if navigation successful
-                ok_button = browsefolderswindow.child_window(title="OK", class_name="Button")
-                if ok_button.exists() and ok_button.is_enabled():
-                    if log_file:
-                        enhanced_logging(f"ComboBox control #{i+1} navigation successful", log_file)
-                    return True
-            except Exception as e:
-                if log_file:
-                    enhanced_logging(f"ComboBox control #{i+1} failed: {str(e)}", log_file)
-    except Exception as e:
-        if log_file:
-            enhanced_logging(f"Error finding/using edit controls: {str(e)}", log_file)
-    
-    # -----------------------------------------------------------------------
-    # ATTEMPT 3: Fallback - try to find any clickable element with target folder name
-    # -----------------------------------------------------------------------
-    if log_file:
-        enhanced_logging("Attempting fallback - looking for target folder name in UI elements", log_file)
-    
-    try:
-        target_folder = os.path.basename(path)
+            enhanced_logging("Navigated to tree view, looking for This PC", log_file)
+        
+        # Step 2: Now find and navigate to This PC first
         all_elements = browsefolderswindow.descendants()
+        this_pc_found = False
         
         for element in all_elements:
             try:
-                if element.is_visible() and element.window_text().strip():
-                    element_text = element.window_text().strip()
-                    if target_folder.lower() in element_text.lower():
-                        if log_file:
-                            enhanced_logging(f"Found potential match: {element_text}", log_file)
-                        element.click_input()
-                        TimeSleep(1.0)
-                        
-                        # Check if navigation successful
-                        ok_button = browsefolderswindow.child_window(title="OK", class_name="Button")
-                        if ok_button.exists() and ok_button.is_enabled():
-                            if log_file:
-                                enhanced_logging("Fallback navigation successful", log_file)
-                            return True
-            except:
-                pass
-    except Exception as e:
-        if log_file:
-            enhanced_logging(f"Fallback attempt failed: {str(e)}", log_file)
-    # -----------------------------------------------------------------------
-    # ATTEMPT 4: Specialized Network Drive Navigation for Windows 11
-    # -----------------------------------------------------------------------
-    if log_file:
-        enhanced_logging("Trying specialized network drive navigation for Windows 11", log_file)
-
-    try:
-        # Check if this is a network path with a drive letter we care about
-        is_p_drive = any(part.strip() in ['P:', 'P:\\'] for part in path.split('\\'))
-        is_h_drive = any(part.strip() in ['H:', 'H:\\'] for part in path.split('\\'))
+                if element.is_visible() and "This PC" in element.window_text():
+                    if log_file:
+                        enhanced_logging(f"Found This PC element: {element.window_text()}", log_file)
+                    element.click_input()
+                    this_pc_found = True
+                    TimeSleep(0.8)  # Wait for expansion
+                    break
+            except Exception as e:
+                if log_file:
+                    enhanced_logging(f"Error checking element: {str(e)}", log_file)
         
-        if is_p_drive or is_h_drive:
-            all_elements = browsefolderswindow.descendants()
+        if not this_pc_found:
+            if log_file:
+                enhanced_logging("Could not find This PC element, trying keyboard navigation", log_file)
+            # Try keyboard navigation if clicking fails
+            send_keys('{HOME}')  # Move to top of tree
+            TimeSleep(0.3)
             
-            # Step 1: Find and click on "This PC" first
-            this_pc_found = False
-            for item in all_elements:
+            # Search for This PC using arrow keys
+            for _ in range(15):  # Try reasonable number of items
+                # Check if current selection is This PC
                 try:
-                    if item.is_visible() and "This PC" in item.window_text():
+                    focused_element = browsefolderswindow.get_focus()
+                    if "This PC" in focused_element.window_text():
                         if log_file:
-                            enhanced_logging(f"Found and clicking 'This PC': {item.window_text()}", log_file)
-                        item.click_input()
-                        TimeSleep(1.0)
+                            enhanced_logging("Found This PC with keyboard navigation", log_file)
                         this_pc_found = True
                         break
                 except:
                     pass
-                    
-            if not this_pc_found and log_file:
-                enhanced_logging("Could not find 'This PC'", log_file)
-                
-            # Step 2: Find and click on the network drive
-            drive_names = []
-            if is_p_drive:
-                drive_names = ["ABISync (P:)", "ABISync", "P:"]
-            elif is_h_drive:
-                drive_names = ["Tyler (\\\\w2k16\\users) (H:)", "Tyler (H:)", "H:"]
-                
-            # Refresh the list of elements after clicking This PC
-            all_elements = browsefolderswindow.descendants()
-            drive_found = False
+                send_keys('{DOWN}')
+                TimeSleep(0.2)
+        
+        if not this_pc_found:
+            if log_file:
+                enhanced_logging("Failed to find This PC node", log_file)
+            return False
+        
+        # Expand This PC if needed
+        send_keys('{RIGHT}')
+        TimeSleep(0.5)
+        
+        # Step 3: Find and click on ABISync (P:)
+        abisync_found = False
+        all_elements = browsefolderswindow.descendants()  # Refresh elements
+        
+        for element in all_elements:
+            try:
+                element_text = element.window_text()
+                if element.is_visible() and ("ABISync (P:)" in element_text or "ABISync" in element_text):
+                    if log_file:
+                        enhanced_logging(f"Found P: drive element: {element_text}", log_file)
+                    element.click_input()
+                    abisync_found = True
+                    TimeSleep(0.8)
+                    break
+            except Exception as e:
+                if log_file:
+                    enhanced_logging(f"Error checking P: drive element: {str(e)}", log_file)
+        
+        if not abisync_found:
+            if log_file:
+                enhanced_logging("Could not find ABISync (P:) element, trying keyboard navigation", log_file)
+            # Try keyboard navigation
+            for _ in range(20):  # Try reasonable number of items
+                try:
+                    focused_element = browsefolderswindow.get_focus()
+                    text = focused_element.window_text()
+                    if "ABISync" in text or "(P:)" in text:
+                        if log_file:
+                            enhanced_logging(f"Found P: drive with keyboard navigation: {text}", log_file)
+                        abisync_found = True
+                        break
+                except:
+                    pass
+                send_keys('{DOWN}')
+                TimeSleep(0.2)
+        
+        if not abisync_found:
+            if log_file:
+                enhanced_logging("Failed to find ABISync (P:) drive", log_file)
+            return False
+        
+        # Expand P: drive
+        send_keys('{RIGHT}')
+        TimeSleep(0.5)
+        
+        # Step 4: Navigate the rest of the path using the text elements
+        path_parts = path.split('\\')
+        # Skip the drive part
+        path_parts = [part for part in path_parts if "P:" not in part and part]
+        
+        if log_file:
+            enhanced_logging(f"Navigating remaining path parts: {path_parts}", log_file)
+        
+        for part in path_parts:
+            part_found = False
+            all_elements = browsefolderswindow.descendants()  # Refresh elements
             
-            for drive_name in drive_names:
-                for item in all_elements:
+            # Try direct click first
+            for element in all_elements:
+                try:
+                    if element.is_visible() and part in element.window_text():
+                        if log_file:
+                            enhanced_logging(f"Found path component: {part}", log_file)
+                        element.click_input()
+                        part_found = True
+                        TimeSleep(0.5)
+                        
+                        # If this isn't the last part, expand it
+                        if part != path_parts[-1]:
+                            send_keys('{RIGHT}')
+                            TimeSleep(0.5)
+                        break
+                except Exception as e:
+                    if log_file:
+                        enhanced_logging(f"Error checking path component: {str(e)}", log_file)
+            
+            # If direct click failed, try keyboard navigation
+            if not part_found:
+                if log_file:
+                    enhanced_logging(f"Could not directly click {part}, trying keyboard navigation", log_file)
+                
+                # Start scanning from current position
+                for _ in range(30):  # Try reasonable number of items
                     try:
-                        if item.is_visible() and drive_name in item.window_text():
+                        focused_element = browsefolderswindow.get_focus()
+                        if part in focused_element.window_text():
                             if log_file:
-                                enhanced_logging(f"Found and clicking drive: {item.window_text()}", log_file)
-                            item.click_input()
-                            TimeSleep(1.0)
-                            drive_found = True
+                                enhanced_logging(f"Found {part} with keyboard navigation", log_file)
+                            part_found = True
+                            
+                            # If this isn't the last part, expand it
+                            if part != path_parts[-1]:
+                                send_keys('{RIGHT}')
+                                TimeSleep(0.5)
                             break
                     except:
                         pass
-                if drive_found:
-                    break
-                    
-            if not drive_found and log_file:
-                enhanced_logging("Could not find network drive", log_file)
-                
-            # Step 3: Navigate remaining path components
-            if drive_found:
-                remaining_path = []
-                # Extract remaining path after drive
-                if is_p_drive:
-                    parts = path.split('P:')
-                    if len(parts) > 1:
-                        remaining_path = [p for p in parts[1].split('\\') if p]
-                elif is_h_drive:
-                    parts = path.split('H:')
-                    if len(parts) > 1:
-                        remaining_path = [p for p in parts[1].split('\\') if p]
-                        
+                    send_keys('{DOWN}')
+                    TimeSleep(0.2)
+            
+            if not part_found:
                 if log_file:
-                    enhanced_logging(f"Remaining path components: {remaining_path}", log_file)
-                    
-                # Click through each folder in sequence
-                for folder in remaining_path:
-                    all_elements = browsefolderswindow.descendants()
-                    folder_found = False
-                    
-                    for item in all_elements:
-                        try:
-                            if item.is_visible() and folder in item.window_text():
-                                if log_file:
-                                    enhanced_logging(f"Found and clicking folder: {item.window_text()}", log_file)
-                                item.click_input()
-                                TimeSleep(0.8)
-                                folder_found = True
-                                break
-                        except:
-                            pass
-                            
-                    if not folder_found and log_file:
-                        enhanced_logging(f"Could not find folder: {folder}", log_file)
-                        break
-                
-                # After navigation, check if OK is enabled
-                ok_button = browsefolderswindow.child_window(title="OK", class_name="Button")
-                if ok_button.exists() and ok_button.is_enabled():
-                    if log_file:
-                        enhanced_logging("Specialized network drive navigation successful", log_file)
-                    return True
+                    enhanced_logging(f"Failed to find path component: {part}", log_file)
+                return False
+        
+        # Final check - verify we've reached the target folder
+        try:
+            ok_button = browsefolderswindow.child_window(title="OK", class_name="Button")
+            if ok_button.exists() and ok_button.is_enabled():
+                if log_file:
+                    enhanced_logging("Successfully navigated to target folder", log_file)
+                return True
+        except:
+            pass
+        
+        return True
+        
     except Exception as e:
         if log_file:
-            enhanced_logging(f"Specialized network drive navigation failed: {str(e)}", log_file)
-    if log_file:
-        enhanced_logging("All navigation attempts failed", log_file)
-    return False
+            enhanced_logging(f"Critical error in Win11 navigation: {str(e)}", log_file)
+        return False
 
 #############################################
 # MAIN CODE
