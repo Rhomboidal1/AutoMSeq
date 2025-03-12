@@ -168,6 +168,11 @@ def CleanBracesFormat(aList):
 
 def get_windows_version():
     """Detect whether the system is running Windows 10 or Windows 11"""
+    # TEMPORARY OVERRIDE FOR TESTING
+    return "Windows 11"  # Force Windows 11 mode for testing
+    
+    # Original detection code (will not be reached due to return above)
+    """Detect whether the system is running Windows 10 or Windows 11"""
     import platform
     import sys
     
@@ -813,7 +818,9 @@ def NavigateToFolder(browsefolderswindow, path, log_file=None):
         return NavigateToFolder_Win11(browsefolderswindow, path, log_file)
     else:
         return NavigateToFolder_Win10(browsefolderswindow, path, log_file)
-
+    
+###Old version of NavigateToFolder_Win11 below
+'''
 def NavigateToFolder_Win11(browsefolderswindow, path, log_file=None):
     """Enhanced navigation function for Windows 11 using Tab navigation and targeted element finding"""
     from pywinauto.keyboard import send_keys
@@ -839,9 +846,6 @@ def NavigateToFolder_Win11(browsefolderswindow, path, log_file=None):
         send_keys('{TAB}')
         TimeSleep(0.3)
         
-        # One more Tab to be sure we've reached the tree view
-        send_keys('{TAB}')
-        TimeSleep(0.5)
         
         if log_file:
             enhanced_logging("Navigated to tree view, looking for This PC", log_file)
@@ -1015,7 +1019,115 @@ def NavigateToFolder_Win11(browsefolderswindow, path, log_file=None):
         if log_file:
             enhanced_logging(f"Critical error in Win11 navigation: {str(e)}", log_file)
         return False
+'''
+def NavigateToFolder_Win11(browsefolderswindow, path, log_file=None):
+    """Enhanced tree-focused navigation function for Windows 11 that also works on Windows 10"""
+    from time import sleep as TimeSleep
+    import os
 
+    if log_file:
+        enhanced_logging(f"Using Windows 11 navigation for path: {path}", log_file)
+        enhanced_logging(f"Target folder name: {os.path.basename(path)}", log_file)
+
+    try:
+        # Establish focus on the dialog
+        browsefolderswindow.set_focus()
+        TimeSleep(0.5)
+        
+        # Try to find the tree view control
+        try:
+            treeView = browsefolderswindow.child_window(class_name="SysTreeView32")
+            if log_file:
+                enhanced_logging("Found SysTreeView32 control", log_file)
+        except Exception as e:
+            if log_file:
+                enhanced_logging(f"Could not find tree view: {str(e)}", log_file)
+            return False
+        
+        # Try different starting points in the tree
+        desktop_paths = [
+            f'\\Desktop\\{get_virtual_folder_name()}',
+            '\\Desktop\\This PC',
+            '\\This PC',
+            '\\Computer'
+        ]
+        
+        item = None
+        for desktop_path in desktop_paths:
+            try:
+                if log_file:
+                    enhanced_logging(f"Trying to find tree node: {desktop_path}", log_file)
+                item = treeView.get_item(desktop_path)
+                if log_file:
+                    enhanced_logging(f"Successfully found tree node: {desktop_path}", log_file)
+                break
+            except Exception as e:
+                if log_file:
+                    enhanced_logging(f"Could not find tree node {desktop_path}: {str(e)}", log_file)
+        
+        # If we found a starting point, navigate through the path
+        if item:
+            data = path.split('\\')
+            for folder in data:
+                if 'P:' in folder:
+                    folder = sub('P:', r'ABISync (P:)', folder)
+                if 'H:' in folder:
+                    folder = sub('H:', r'Tyler (\\\\w2k16\\users) (H:)', folder)
+                
+                folder_found = False
+                children = item.children()
+                if log_file:
+                    child_texts = [child.text() for child in children]
+                    enhanced_logging(f"Available children: {child_texts}", log_file)
+                
+                for child in children:
+                    if child.text() == folder:
+                        if log_file:
+                            enhanced_logging(f"Found folder: {folder}", log_file)
+                        browsefolderswindow.set_focus()
+                        item = child
+                        item.click_input()
+                        folder_found = True
+                        TimeSleep(0.5)  # Increased delay for reliable tree navigation
+                        break
+                
+                if not folder_found:
+                    if log_file:
+                        enhanced_logging(f"Could not find folder: {folder}", log_file)
+                    
+                    # Try case-insensitive partial match as fallback
+                    for child in children:
+                        if folder.lower() in child.text().lower():
+                            if log_file:
+                                enhanced_logging(f"Found partial match: {child.text()} for {folder}", log_file)
+                            browsefolderswindow.set_focus()
+                            item = child
+                            item.click_input()
+                            folder_found = True
+                            TimeSleep(0.5)
+                            break
+                
+                if not folder_found:
+                    if log_file:
+                        enhanced_logging(f"Failed to find folder {folder} - stopping navigation", log_file)
+                    return False
+            
+            # Navigation completed successfully
+            if log_file:
+                enhanced_logging("Tree navigation successful", log_file)
+            return True
+        
+        if log_file:
+            enhanced_logging("Could not find starting point in tree view", log_file)
+        return False
+        
+    except Exception as e:
+        if log_file:
+            enhanced_logging(f"Critical error in navigation: {str(e)}", log_file)
+            if isinstance(e, Exception):
+                import traceback
+                enhanced_logging(f"Error details: {traceback.format_exc()}", log_file)
+        return False
 #############################################
 # MAIN CODE
 #############################################
