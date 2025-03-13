@@ -471,8 +471,8 @@ def MseqOrder(orderpath, log_file=None):
             enhanced_logging("Navigation successful, clicking OK button", log_file)
             
         try:
-            okDiaglogButton = app.BrowseForFolder.child_window(title="OK", class_name="Button")
-            okDiaglogButton.click_input()
+            okDialogButton = app.BrowseForFolder.child_window(title="OK", class_name="Button")
+            okDialogButton.click_input()
             if log_file:
                 enhanced_logging("Clicked OK button", log_file)
         except Exception as ok_error:
