@@ -1,9 +1,4 @@
 # config.py
-import os
-import socket
-import getpass
-
-# config.py
 import getpass
 
 class MseqConfig:

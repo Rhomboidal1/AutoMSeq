@@ -1,0 +1,129 @@
+Control Identifiers:
+
+Afx:400000:b:10007:6:43e0fc9 - 'mSeq'    (L0, T570, R800, B1040)
+['mSeqAfx:400000:b:10007:6:43e0fc9', 'Afx:400000:b:10007:6:43e0fc9', 'mSeq']
+child_window(title="mSeq", class_name="Afx:400000:b:10007:6:43e0fc9")
+   | 
+   | AfxFrameOrView42 - ''    (L3, T640, R797, B1018)
+   | ['AfxFrameOrView42', 'Quality AfxFrameOrView42']
+   | child_window(class_name="AfxFrameOrView42")
+   |    | 
+   |    | isigraph - 'gr'    (L75, T658, R771, B906)
+   |    | ['gr', 'isigraph', 'grisigraph']
+   |    | child_window(title="gr", class_name="isigraph")
+   |    | 
+   |    | Static - 'Trace'    (L17, T938, R77, B960)
+   |    | ['Static', 'TraceStatic', 'Trace', 'Static0', 'Static1']
+   |    | child_window(title="Trace", class_name="Static")
+   |    | 
+   |    | ComboBox - ''    (L81, T936, R359, B959)
+   |    | ['TraceComboBox', 'ComboBox']
+   |    | child_window(class_name="ComboBox")
+   |    | 
+   |    | RadioButton - '&Traces'    (L561, T938, R643, B962)
+   |    | ['&TracesRadioButton', '&Traces', 'RadioButton', 'RadioButton0', 'RadioButton1']
+   |    | child_window(title="&Traces", class_name="Button")
+   |    | 
+   |    | RadioButton - '&Contigs'    (L561, T974, R639, B998)
+   |    | ['&Contigs', '&ContigsRadioButton', 'RadioButton2']
+   |    | child_window(title="&Contigs", class_name="Button")
+   |    | 
+   |    | GroupBox - 'View'    (L545, T924, R673, B1008)
+   |    | ['View', 'GroupBox', 'ViewGroupBox']
+   |    | child_window(title="View", class_name="Button")
+   |    | 
+   |    | ScrollBar - 'scrollv'    (L771, T658, R787, B906)
+   |    | ['ScrollBar', 'scrollv', 'scrollvScrollBar', 'ScrollBar0', 'ScrollBar1']
+   |    | child_window(title="scrollv", class_name="ScrollBar")
+   |    | 
+   |    | ScrollBar - 'scrollh'    (L75, T906, R771, B922)
+   |    | ['ScrollBar2', 'scrollhScrollBar', 'scrollh']
+   |    | child_window(title="scrollh", class_name="ScrollBar")
+   |    | 
+   |    | Static - 'Quality '    (L23, T666, R75, B688)
+   |    | ['Quality Static', 'Quality ', 'Static2']
+   |    | child_window(title="Quality ", class_name="Static")
+   |    | 
+   |    | Static - 'Call '    (L27, T686, R73, B708)
+   |    | ['Call ', 'Call Static', 'Static3']
+   |    | child_window(title="Call ", class_name="Static")
+   |    | 
+   |    | Button - 'S&earch'    (L269, T974, R337, B998)
+   |    | ['S&earch', 'Button', 'S&earchButton']
+   |    | child_window(title="S&earch", class_name="Button")
+   |    | 
+   |    | Edit - ''    (L101, T974, R251, B998)
+   |    | ['TraceEdit', 'Edit']
+   |    | child_window(class_name="Edit")
+   |    | 
+   |    | CheckBox - '&Reverse'    (L381, T938, R481, B962)
+   |    | ['&ReverseCheckBox', '&Reverse', 'CheckBox', 'CheckBox0', 'CheckBox1']
+   |    | child_window(title="&Reverse", class_name="Button")
+   |    | 
+   |    | CheckBox - '&Autoscroll'    (L381, T974, R465, B998)
+   |    | ['CheckBox2', '&Autoscroll', '&AutoscrollCheckBox']
+   |    | child_window(title="&Autoscroll", class_name="Button")
+   | 
+   | isigraph - 'gr'    (L75, T658, R771, B906)
+   | ['gr', 'isigraph', 'grisigraph']
+   | child_window(title="gr", class_name="isigraph")
+   | 
+   | Static - 'Trace'    (L17, T938, R77, B960)
+   | ['Static', 'TraceStatic', 'Trace', 'Static0', 'Static1']
+   | child_window(title="Trace", class_name="Static")
+   | 
+   | ComboBox - ''    (L81, T936, R359, B959)
+   | ['TraceComboBox', 'ComboBox']
+   | child_window(class_name="ComboBox")
+   | 
+   | RadioButton - '&Traces'    (L561, T938, R643, B962)
+   | ['&TracesRadioButton', '&Traces', 'RadioButton', 'RadioButton0', 'RadioButton1']
+   | child_window(title="&Traces", class_name="Button")
+   | 
+   | RadioButton - '&Contigs'    (L561, T974, R639, B998)
+   | ['&Contigs', '&ContigsRadioButton', 'RadioButton2']
+   | child_window(title="&Contigs", class_name="Button")
+   | 
+   | GroupBox - 'View'    (L545, T924, R673, B1008)
+   | ['View', 'GroupBox', 'ViewGroupBox']
+   | child_window(title="View", class_name="Button")
+   | 
+   | ScrollBar - 'scrollv'    (L771, T658, R787, B906)
+   | ['ScrollBar', 'scrollv', 'scrollvScrollBar', 'ScrollBar0', 'ScrollBar1']
+   | child_window(title="scrollv", class_name="ScrollBar")
+   | 
+   | ScrollBar - 'scrollh'    (L75, T906, R771, B922)
+   | ['ScrollBar2', 'scrollhScrollBar', 'scrollh']
+   | child_window(title="scrollh", class_name="ScrollBar")
+   | 
+   | Static - 'Quality '    (L23, T666, R75, B688)
+   | ['Quality Static', 'Quality ', 'Static2']
+   | child_window(title="Quality ", class_name="Static")
+   | 
+   | Static - 'Call '    (L27, T686, R73, B708)
+   | ['Call ', 'Call Static', 'Static3']
+   | child_window(title="Call ", class_name="Static")
+   | 
+   | Button - 'S&earch'    (L269, T974, R337, B998)
+   | ['S&earch', 'Button', 'S&earchButton']
+   | child_window(title="S&earch", class_name="Button")
+   | 
+   | Edit - ''    (L101, T974, R251, B998)
+   | ['TraceEdit', 'Edit']
+   | child_window(class_name="Edit")
+   | 
+   | CheckBox - '&Reverse'    (L381, T938, R481, B962)
+   | ['&ReverseCheckBox', '&Reverse', 'CheckBox', 'CheckBox0', 'CheckBox1']
+   | child_window(title="&Reverse", class_name="Button")
+   | 
+   | CheckBox - '&Autoscroll'    (L381, T974, R465, B998)
+   | ['CheckBox2', '&Autoscroll', '&AutoscrollCheckBox']
+   | child_window(title="&Autoscroll", class_name="Button")
+   | 
+   | StatusBar - ''    (L3, T1018, R797, B1037)
+   | ['StatusBar', 'StatusBarNo Phred files', 'mSeqStatusBar']
+   | child_window(class_name="msctls_statusbar32")
+   | 
+   | Toolbar - ''    (L3, T616, R797, B640)
+   | ['Toolbar', 'mSeqToolbar']
+   | child_window(class_name="ToolbarWindow32")

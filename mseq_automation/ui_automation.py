@@ -88,34 +88,119 @@ class MseqAutomation:
         dialog.set_focus()
         tree_view = dialog.child_window(class_name="SysTreeView32")
         
-        # Get the virtual folder name and prepare path
+        # Get the virtual folder name
         import win32com.client
         shell = win32com.client.Dispatch("Shell.Application")
         namespace = shell.Namespace(0x11)  # CSIDL_DRIVES
         virtual_folder = namespace.Title
-        desktop_path = f'\\Desktop\\{virtual_folder}'
         
-        # Start navigation from desktop
-        item = tree_view.get_item(desktop_path)
-        folders = path.split('\\')
+        # Parse the path
+        if ":" in path:
+            # Path has a drive letter
+            parts = path.split("\\")
+            drive = parts[0]  # e.g., "P:"
+            folders = parts[1:] if len(parts) > 1 else []
+        else:
+            # Network path
+            parts = path.split("\\")
+            drive = "\\" + "\\".join(parts[:3])  # e.g., \\server\share
+            folders = parts[3:] if len(parts) > 3 else []
         
-        # Navigate through each folder
-        for folder in folders:
-            # Handle network drive mappings
-            for drive, mapped_name in self.config.NETWORK_DRIVES.items():
-                if drive in folder:
-                    folder = folder.replace(drive, mapped_name)
+        try:
+            # Start from Desktop
+            desktop_item = tree_view.get_item('\\Desktop')
+            desktop_item.expand()
+            time.sleep(0.3)
             
-            # Find and select the folder
-            for child in item.children():
-                if child.text() == folder:
-                    dialog.set_focus()
-                    item = child
-                    item.click_input()
+            # Navigate to This PC
+            this_pc_item = None
+            for child in desktop_item.children():
+                if "PC" in child.text() or "Computer" in child.text() or virtual_folder in child.text():
+                    this_pc_item = child
                     break
+            
+            if not this_pc_item:
+                raise ValueError(f"Could not find This PC or Computer in tree view")
+            
+            this_pc_item.expand()
+            time.sleep(0.3)
+            
+            # Navigate to the drive
+            drive_found = False
+            mapped_name = self.config.NETWORK_DRIVES.get(drive, None)
+            
+            for drive_item in this_pc_item.children():
+                drive_text = drive_item.text()
+                
+                # Check for both exact match and mapped name
+                if (drive == drive_text or 
+                    drive in drive_text or 
+                    (mapped_name and mapped_name in drive_text)):
+                    
+                    dialog.set_focus()
+                    drive_item.click_input()
+                    drive_found = True
+                    current_item = drive_item
+                    time.sleep(0.3)
+                    break
+            
+            if not drive_found:
+                raise ValueError(f"Could not find drive '{drive}' or '{mapped_name}' in tree view")
+            
+            # Navigate through subfolders
+            for folder in folders:
+                current_item.expand()
+                time.sleep(0.3)
+                
+                # Look for exact match first
+                folder_found = False
+                for child in current_item.children():
+                    if child.text() == folder:
+                        dialog.set_focus()
+                        child.click_input()
+                        folder_found = True
+                        current_item = child
+                        time.sleep(0.3)
+                        break
+                
+                if not folder_found:
+                    # Try partial match
+                    for child in current_item.children():
+                        if folder.lower() in child.text().lower():
+                            dialog.set_focus()
+                            child.click_input()
+                            folder_found = True
+                            current_item = child
+                            time.sleep(0.3)
+                            break
+                
+                if not folder_found:
+                    raise ValueError(f"Could not find folder '{folder}' or similar")
+            
+            # Final folder should now be selected
+            return True
+        
+        except Exception as e:
+            # Log the error but don't raise it - we want to continue even if navigation fails
+            print(f"Error during folder navigation: {e}")
+            return False
     
     def process_folder(self, folder_path):
         """Process a folder with mSeq"""
+        try:
+            if not os.path.exists(folder_path):
+                print(f"Warning: Folder does not exist: {folder_path}")
+                return False
+                
+            # Check if there are any .ab1 files to process
+            ab1_files = [f for f in os.listdir(folder_path) if f.endswith('.ab1')]
+            if not ab1_files:
+                print(f"No .ab1 files found in {folder_path}, skipping processing")
+                return False
+        except Exception as e:
+            print(f"Error checking folder {folder_path}: {e}")
+            return False
+        
         self.app, self.main_window = self.connect_or_start_mseq()
         self.main_window.set_focus()
         send_keys('^n')  # Ctrl+N for new project
@@ -127,9 +212,9 @@ class MseqAutomation:
         # Add a delay for the first browsing operation
         if self.first_time_browsing:
             self.first_time_browsing = False
-            time.sleep(1.2)  # mSeq needs time to initialize file browsing
+            time.sleep(0.5)  # mSeq needs time to initialize file browsing
         else:
-            time.sleep(0.5)
+            time.sleep(0.3)
         
         # Navigate to the target folder
         self.navigate_folder_tree(dialog_window, folder_path)
@@ -164,13 +249,17 @@ class MseqAutomation:
         yes_button = call_bases_window.child_window(title="&Yes", class_name="Button")
         yes_button.click_input()
         
-        # Wait for processing to complete
-        timings.wait_until(
-            timeout=self.config.TIMEOUTS["process_completion"],
-            retry_interval=0.2,
-            func=lambda: self.is_process_complete(folder_path),
-            value=True
-        )
+    # Wait for processing to complete with graceful timeout handling
+        try:
+            timings.wait_until(
+                timeout=self.config.TIMEOUTS["process_completion"],
+                retry_interval=0.2,
+                func=lambda: self.is_process_complete(folder_path),
+                value=True
+            )
+        except timings.TimeoutError:
+            print(f"Warning: Timeout waiting for processing to complete for {folder_path}")
+            print("This may be normal if the folder has already been processed or has special files")
         
         # Handle Low quality files skipped dialog if it appears
         if self.app.window(title="Low quality files skipped").exists():
@@ -179,10 +268,16 @@ class MseqAutomation:
             ok_button.click_input()
         
         # Handle Read information dialog
-        self.wait_for_dialog("read_info")
-        if self.app.window(title_re='Read information for*').exists():
-            read_window = self.app.window(title_re='Read information for*')
-            read_window.close()
+        try:
+            self.wait_for_dialog("read_info")
+            if self.app.window(title_re='Read information for*').exists():
+                read_window = self.app.window(title_re='Read information for*')
+                read_window.close()
+        except timings.TimeoutError:
+            print(f"Read information dialog did not appear for {folder_path}")
+            # Continue processing
+        
+        return True
     
     def close(self):
         """Close the mSeq application"""

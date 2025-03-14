@@ -1,0 +1,22 @@
+Window Title: mSeq
+Window Class: Afx:400000:b:10007:6:6cb0ba9
+Window Rectangle: (L0, T570, R800, B1040)
+
+Controls:
+-  (AfxFrameOrView42)
+- gr (isigraph)
+- Trace (Static)
+-  (ComboBox)
+- &Traces (Button)
+- &Contigs (Button)
+- View (Button)
+- scrollv (ScrollBar)
+- scrollh (ScrollBar)
+- Quality  (Static)
+- Call  (Static)
+- S&earch (Button)
+-  (Edit)
+- &Reverse (Button)
+- &Autoscroll (Button)
+-  (msctls_statusbar32)
+-  (ToolbarWindow32)
