@@ -1,14 +1,24 @@
 # config.py
+import os
+import socket
+import getpass
+
+# config.py
+import getpass
+
 class MseqConfig:
+    # Get current username for H drive mapping
+    USERNAME = getpass.getuser()
+    
     # Paths
     PYTHON32_PATH = r"C:\Python312-32\python.exe"
     MSEQ_PATH = r"C:\DNA\Mseq4\bin"
     MSEQ_EXECUTABLE = r"j.exe -jprofile mseq.ijl"
     
-    # Network drives
+    # Network drives - these are mapped differently in file dialogs
     NETWORK_DRIVES = {
         "P:": r"ABISync (P:)",
-        "H:": r"Tyler (\\w2k16\users) (H:)"
+        "H:": f"{USERNAME} (\\\\w2k16\\users) (H:)"  # Dynamic user mapping
     }
     
     # Timeouts for UI operations
@@ -36,3 +46,8 @@ class MseqConfig:
         '.seq.qual.txt',
         '.seq.txt'
     ]
+    
+    # Paths for data operations
+    KEY_FILE_PATH = r"P:\order_key.txt"
+    BATCH_FILE_PATH = r"P:\generate-data-sorting-key-file.bat"
+    REINJECT_FOLDER = r"P:\Data\Reinjects"
