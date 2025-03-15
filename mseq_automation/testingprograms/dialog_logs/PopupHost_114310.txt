@@ -1,0 +1,5 @@
+Window Title: PopupHost
+Window Class: Microsoft.UI.Content.PopupWindowSiteBridge
+Window Rectangle: (L874, T147, R989, B188)
+
+Controls:

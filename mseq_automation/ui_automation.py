@@ -108,9 +108,20 @@ class MseqAutomation:
         
         try:
             # Start from Desktop
-            desktop_item = tree_view.get_item('\\Desktop')
+            desktop_item = None
+            for root_item in tree_view.roots():
+                if "Desktop" in root_item.text():
+                    desktop_item = root_item
+                    break
+
+            if not desktop_item:
+                # Try the original approach as fallback
+                try:
+                    desktop_item = tree_view.get_item('\\Desktop')
+                except Exception as e:
+                    raise ValueError(f"Could not find Desktop in tree view: {e}")
             desktop_item.expand()
-            time.sleep(0.3)
+            time.sleep(1.0)
             
             # Navigate to This PC
             this_pc_item = None
@@ -123,7 +134,7 @@ class MseqAutomation:
                 raise ValueError(f"Could not find This PC or Computer in tree view")
             
             this_pc_item.expand()
-            time.sleep(0.3)
+            time.sleep(1.0)
             
             # Navigate to the drive
             drive_found = False
@@ -141,7 +152,7 @@ class MseqAutomation:
                     drive_item.click_input()
                     drive_found = True
                     current_item = drive_item
-                    time.sleep(0.3)
+                    time.sleep(1.0)
                     break
             
             if not drive_found:
@@ -150,7 +161,7 @@ class MseqAutomation:
             # Navigate through subfolders
             for folder in folders:
                 current_item.expand()
-                time.sleep(0.3)
+                time.sleep(1.0)
                 
                 # Look for exact match first
                 folder_found = False
@@ -160,7 +171,7 @@ class MseqAutomation:
                         child.click_input()
                         folder_found = True
                         current_item = child
-                        time.sleep(0.3)
+                        time.sleep(1.0)
                         break
                 
                 if not folder_found:
@@ -171,9 +182,12 @@ class MseqAutomation:
                             child.click_input()
                             folder_found = True
                             current_item = child
-                            time.sleep(0.3)
+                            time.sleep(1.0)
                             break
-                
+                # Add this validation check here
+                if folder_found:
+                    # Small delay to ensure the UI updates
+                    time.sleep(0.5)
                 if not folder_found:
                     raise ValueError(f"Could not find folder '{folder}' or similar")
             
@@ -214,7 +228,7 @@ class MseqAutomation:
             self.first_time_browsing = False
             time.sleep(0.5)  # mSeq needs time to initialize file browsing
         else:
-            time.sleep(0.3)
+            time.sleep(1.0)
         
         # Navigate to the target folder
         self.navigate_folder_tree(dialog_window, folder_path)

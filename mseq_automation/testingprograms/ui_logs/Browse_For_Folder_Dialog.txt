@@ -1,0 +1,66 @@
+Window Title: Browse For Folder
+Window Class: #32770
+Window Rectangle: (L589, T232, R1332, B800)
+
+Control Identifiers:
+Control Identifiers:
+
+Dialog - 'Browse For Folder'    (L589, T232, R1332, B800)
+['Dialog', 'Browse For Folder', 'Browse For FolderDialog']
+child_window(title="Browse For Folder", class_name="#32770")
+   | 
+   | Static - 'Choose project directory'    (L612, T274, R1309, B313)
+   | ['Choose project directory', 'Choose project directoryStatic', 'Static', 'Choose project directoryStatic0', 'Choose project directoryStatic1', 'Static0', 'Static1', 'Choose project directory0', 'Choose project directory1']
+   | child_window(title="Choose project directory", class_name="Static")
+   | 
+   | Static - ''    (L612, T320, R900, B468)
+   | ['Choose project directoryStatic2', 'Static2']
+   | child_window(class_name="Static")
+   | 
+   | SHBrowseForFolder ShellNameSpace Control - 'Choose project directory'    (L612, T320, R1309, B745)
+   | ['SHBrowseForFolder ShellNameSpace Control', 'Choose project directory2', 'Choose project directorySHBrowseForFolder ShellNameSpace Control']
+   | child_window(title="Choose project directory", class_name="SHBrowseForFolder ShellNameSpace Control")
+   |    | 
+   |    | Static - 'Choose project directory'    (L613, T321, R613, B321)
+   |    | ['Choose project directory3', 'Choose project directoryStatic3', 'Static3']
+   |    | child_window(title="Choose project directory", class_name="Static")
+   |    | 
+   |    | TreeView - 'Navigation Pane'    (L613, T321, R1308, B744)
+   |    | ['Navigation Pane', 'Navigation PaneTreeView', 'TreeView']
+   |    | child_window(title="Navigation Pane", class_name="SysTreeView32")
+   | 
+   | Static - 'Choose project directory'    (L613, T321, R613, B321)
+   | ['Choose project directory3', 'Choose project directoryStatic3', 'Static3']
+   | child_window(title="Choose project directory", class_name="Static")
+   | 
+   | TreeView - 'Navigation Pane'    (L613, T321, R1308, B744)
+   | ['Navigation Pane', 'Navigation PaneTreeView', 'TreeView']
+   | child_window(title="Navigation Pane", class_name="SysTreeView32")
+   | 
+   | Static - '&Folder:'    (L612, T728, R657, B741)
+   | ['&Folder:', 'Static4', '&Folder:Static']
+   | child_window(title="&Folder:", class_name="Static")
+   | 
+   | Edit - 'Documents'    (L665, T722, R1310, B745)
+   | ['Browse For FolderEdit', 'Edit']
+   | child_window(title="Documents", class_name="Edit")
+   | 
+   | Static - 'To view subfolders, click the symbol next to a folder.'    (L612, T728, R1309, B751)
+   | ['To view subfolders, click the symbol next to a folder.Static', 'To view subfolders, click the symbol next to a folder.', 'Static5']
+   | child_window(title="To view subfolders, click the symbol next to a folder.", class_name="Static")
+   | 
+   | Button - '&Make New Folder'    (L612, T758, R717, B781)
+   | ['Button', '&Make New FolderButton', '&Make New Folder', 'Button0', 'Button1']
+   | child_window(title="&Make New Folder", class_name="Button")
+   | 
+   | Button - 'OK'    (L1153, T758, R1228, B781)
+   | ['OKButton', 'OK', 'Button2']
+   | child_window(title="OK", class_name="Button")
+   | 
+   | Button - 'Cancel'    (L1234, T758, R1309, B781)
+   | ['CancelButton', 'Button3', 'Cancel']
+   | child_window(title="Cancel", class_name="Button")
+   | 
+   | ScrollBar - ''    (L1307, T775, R1324, B792)
+   | ['ScrollBar', 'CancelScrollBar']
+   | child_window(class_name="ScrollBar")

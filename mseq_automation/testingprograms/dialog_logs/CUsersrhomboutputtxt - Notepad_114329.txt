@@ -1,0 +1,978 @@
+Window Title: C:\Users\rhomb\output.txt - Notepad++
+Window Class: Notepad++
+Window Rectangle: (L98, T120, R1122, B820)
+
+Controls:
+- Selected Tab (#32770)
+- Caption (Button)
+-  (Static)
+- Tab1 (SysTabControl32)
+- Selected Tab (#32770)
+- Caption (Button)
+-  (Static)
+- Tab1 (SysTabControl32)
+- Selected Tab (#32770)
+- Caption (Button)
+-  (Static)
+- Tab1 (SysTabControl32)
+- Selected Tab (#32770)
+- Caption (Button)
+-  (Static)
+- Tab1 (SysTabControl32)
+- # Concatenated Python files from 'Github\AutoMSeq\mseq_automation\'
+# Total files: 8
+
+
+
+################################################################################
+# File 1/8: config.py
+################################################################################
+
+# config.py
+import getpass
+
+class MseqConfig:
+    # Get current username for H drive mapping
+    USERNAME = getpass.getuser()
+    
+    # Paths
+    PYTHON32_PATH = r"C:\Python312-32\python.exe"
+    MSEQ_PATH = r"C:\DNA\Mseq4\bin"
+    MSEQ_EXECUTABLE = r"j.exe -jprofile mseq.ijl"
+    
+    # Network drives - these are mapped differently in file dialogs
+    NETWORK_DRIVES = {
+        "P:": r"ABISync (P:)",
+        "H:": f"{USERNAME} (\\\\w2k16\\users) (H:)"  # Dynamic user mapping
+    }
+    
+    # Timeouts for UI operations
+    TIMEOUTS = {
+        "browse_dialog": 5,
+        "preferences": 5, 
+        "copy_files": 5,
+        "error_window": 20,
+        "call_bases": 10,
+        "process_completion": 45,
+        "read_info": 5
+    }
+    
+    # Special folders
+    IND_NOT_READY_FOLDER = "IND Not Ready"
+    
+    # Mseq artifacts
+    MSEQ_ARTIFACTS = {'chromat_dir', 'edit_dir', 'phd_dir', 'mseq4.ini'}
+    
+    # File types
+    TEXT_FILES = [
+        '.raw.qual.txt',
+        '.raw.seq.txt',
+        '.seq.info.txt',
+        '.seq.qual.txt',
+        '.seq.txt'
+    ]
+    
+    # Paths for data operations
+    KEY_FILE_PATH = r"P:\order_key.txt"
+    BATCH_FILE_PATH = r"P:\generate-data-sorting-key-file.bat"
+    REINJECT_FOLDER = r"P:\Data\Reinjects"
+
+################################################################################
+# File 2/8: file_system_dao.py
+################################################################################
+
+# file_system_dao.py
+import os
+import re
+from shutil import move
+
+class FileSystemDAO:
+    def __init__(self, config):
+        self.config = config
+    
+    def get_folders(self, path, pattern=None):
+        """Get folders matching an optional regex pattern"""
+        folders = []
+        for item in os.listdir(path):
+            full_path = os.path.join(path, item)
+            if os.path.isdir(full_path):
+                if pattern is None or re.search(pattern, item.lower()):
+                    folders.append(full_path)
+        return folders
+    
+    def get_files_by_extension(self, folder, extension):
+        """Get all files with specified extension in a folder"""
+        files = []
+        for item in os.listdir(folder):
+            if item.endswith(extension):
+                files.append(os.path.join(folder, item))
+        return files
+    
+    def contains_file_type(self, folder, extension):
+        """Check if folder contains files with specified extension"""
+        for item in os.listdir(folder):
+            if item.endswith(extension):
+                return True
+        return False
+    
+    def create_folder_if_not_exists(self, path):
+        """Create folder if it doesn't exist"""
+        if not os.path.exists(path):
+            os.mkdir(path)
+        return path
+    
+    def move_folder(self, source, destination):
+        """Move folder with proper error handling"""
+        try:
+            move(source, destination)
+            return True
+        except Exception as e:
+            # Proper logging would be implemented here
+            print(f"Error moving folder {source}: {e}")
+            return False
+    
+    def get_folder_name(self, path):
+        """Get the folder name from a path"""
+        return os.path.basename(path)
+    
+    def get_parent_folder(self, path):
+        """Get the parent folder path"""
+        return os.path.dirname(path)
+    
+    def join_paths(self, *args):
+        """Join path components"""
+        return os.path.join(*args)
+    
+    def load_order_key(self, key_file_path):
+        """Load the order key file"""
+        try:
+            import numpy as np
+            return np.loadtxt(key_file_path, dtype=str, delimiter='\t')
+        except Exception as e:
+            print(f"Error loading order key file: {e}")
+            return None
+    
+    def file_exists(self, path):
+        """Check if a file exists"""
+        return os.path.isfile(path)
+    
+    def folder_exists(self, path):
+        """Check if a folder exists"""
+        return os.path.isdir(path)
+    
+    def count_files_by_extensions(self, folder, extensions):
+        """Count files with specific extensions in a folder"""
+        counts = {ext: 0 for ext in extensions}
+        for item in os.listdir(folder):
+            file_path = os.path.join(folder, item)
+            if os.path.isfile(file_path):
+                for ext in extensions:
+                    if item.endswith(ext):
+                        counts[ext] += 1
+        return counts
+    
+    def get_folder_creation_time(self, folder):
+        """Get the creation time of a folder"""
+        return os.path.getctime(folder)
+    
+    def get_folder_modification_time(self, folder):
+        """Get the last modification time of a folder"""
+        return os.path.getmtime(folder)
+
+################################################################################
+# File 3/8: folder_processor.py
+################################################################################
+
+# folder_processor.py
+import os
+import re
+import numpy as np
+
+class FolderProcessor:
+    def __init__(self, file_dao, ui_automation, config, logger=None):
+        self.file_dao = file_dao
+        self.ui_automation = ui_automation
+        self.config = config
+        self.logger = logger or print  # Default to print if no logger provided
+    
+    def is_mseq_processed(self, folder):
+        """Check if a folder has been processed by mSeq"""
+        current_artifacts = []
+        for item in os.listdir(folder):
+            if item in self.config.MSEQ_ARTIFACTS:
+                current_artifacts.append(item)
+        return set(current_artifacts) == self.config.MSEQ_ARTIFACTS
+    
+    def has_output_files(self, folder):
+        """Check if folder has all 5 expected output files"""
+        count = 0
+        for item in os.listdir(folder):
+            if os.path.isfile(os.path.join(folder, item)):
+                for extension in self.config.TEXT_FILES:
+                    if item.endswith(extension):
+                        count += 1
+        return count == 5
+    
+    def check_order_status(self, folder):
+        """Check if an order folder has been processed, has braces, and has ab1 files"""
+        was_mseqed = False
+        has_braces = False
+        has_ab1_files = False
+        
+        # Check for mSeq artifacts
+        current_artifacts = []
+        for item in os.listdir(folder):
+            if item in self.config.MSEQ_ARTIFACTS:
+                current_artifacts.append(item)
+            
+            # Check for braces in ab1 files
+            if item.endswith('.ab1'):
+                has_ab1_files = True
+                if '{' in item or '}' in item:
+                    has_braces = True
+        
+        was_mseqed = set(current_artifacts) == self.config.MSEQ_ARTIFACTS
+        return was_mseqed, has_braces, has_ab1_files
+    
+    def get_order_number(self, folder_name):
+        """Extract order number from folder name"""
+        match = re.search('_\\d+', folder_name)
+        if match:
+            return re.search('\\d+', match.group(0)).group(0)
+        return ''
+    
+    def get_i_number(self, folder_name):
+        """Extract I number from folder name"""
+        match = re.search('bioi-\\d+', str(folder_name).lower())
+        if match:
+            bio_string = match.group(0)
+            return re.search('\\d+', bio_string).group(0)
+        return None
+    
+    def get_destination_for_order(self, order_folder, base_path):
+        """Determine the correct destination for an order folder"""
+        folder_name = os.path.basename(order_folder)
+        i_num = self.get_i_number(folder_name)
+        
+        if i_num:
+            # Navigate up one level to get to the day folder
+            day_data_path = os.path.dirname(base_path)
+            
+            # Search for the matching I number folder
+            for item in os.listdir(day_data_path):
+                if (re.search(f'bioi-{i_num}', item.lower()) and 
+                    not re.search('reinject', item.lower())):
+                    return os.path.join(day_data_path, item)
+        
+        # If no matching folder found, return the day data path
+        return os.path.dirname(base_path)
+    
+    def process_bio_folder(self, folder):
+        """Process a BioI folder (specialized for IND)"""
+        self.logger(f"Processing BioI folder: {os.path.basename(folder)}")
+        
+        # Get all order folders in this BioI folder
+        order_folders = self.file_dao.get_folders(folder, r'bioi-\d+_.+_\d+')
+        
+        for order_folder in order_folders:
+            # Skip Andreev's orders for mSeq processing
+            if 'andreev' in order_folder.lower():
+                continue
+                
+            order_number = self.get_order_number(os.path.basename(order_folder))
+            ab1_files = self.file_dao.get_files_by_extension(order_folder, '.ab1')
+            
+            # Check order status
+            was_mseqed, has_braces, has_ab1_files = self.check_order_status(order_folder)
+            
+            if not was_mseqed and not has_braces:
+                # Process if we have the right number of ab1 files
+                expected_count = self._get_expected_file_count(order_number)
+                
+                if len(ab1_files) == expected_count:
+                    if has_ab1_files:
+                        self.ui_automation.process_folder(order_folder)
+                        self.logger(f"mSeq completed: {os.path.basename(order_folder)}")
+                else:
+                    # Move to Not Ready folder if incomplete
+                    not_ready_path = os.path.join(os.path.dirname(folder), "IND Not Ready")
+                    self.file_dao.create_folder_if_not_exists(not_ready_path)
+                    self.file_dao.move_folder(order_folder, not_ready_path)
+                    self.logger(f"Order moved to Not Ready: {os.path.basename(order_folder)}")
+    
+    def process_plate_folder(self, folder):
+        """Process a plate folder"""
+        self.logger(f"Processing plate folder: {os.path.basename(folder)}")
+        
+        # Check if folder contains FSA files (skip if it does)
+        if self.file_dao.contains_file_type(folder, '.fsa'):
+            self.logger(f"Skipping folder with FSA files: {os.path.basename(folder)}")
+            return
+        
+        # Check if already processed
+        was_mseqed = self.is_mseq_processed(folder)
+        
+        if not was_mseqed:
+            # Process with mSeq
+            self.ui_automation.process_folder(folder)
+            self.logger(f"mSeq completed: {os.path.basename(folder)}")
+    
+    def process_wildcard_folder(self, folder):
+        """Process any folder"""
+        self.logger(f"Processing folder: {os.path.basename(folder)}")
+        
+        # Skip folders with FSA files
+        if self.file_dao.contains_file_type(folder, '.fsa'):
+            self.logger(f"Skipping folder with FSA files: {os.path.basename(folder)}")
+            return
+        
+        # Check if already processed
+        was_mseqed = self.is_mseq_processed(folder)
+        
+        if not was_mseqed:
+            # Process with mSeq
+            self.ui_automation.process_folder(folder)
+            self.logger(f"mSeq completed: {os.path.basename(folder)}")
+    
+    def process_order_folder(self, order_folder, data_folder_path):
+        """Process an order folder"""
+        self.logger(f"Processing order folder: {os.path.basename(order_folder)}")
+        
+        # Skip Andreev's orders for mSeq processing
+        if 'andreev' in order_folder.lower():
+            order_number = self.get_order_number(os.path.basename(order_folder))
+            ab1_files = self.file_dao.get_files_by_extension(order_folder, '.ab1')
+            expected_count = self._get_expected_file_count(order_number)
+            
+            # For Andreev's orders, just check if complete to move back if needed
+            if len(ab1_files) == expected_count:
+                # If we're processing from IND Not Ready, move it back
+                if os.path.basename(os.path.dirname(order_folder)) == "IND Not Ready":
+                    destination = self.get_destination_for_order(order_folder, data_folder_path)
+                    self.file_dao.move_folder(order_folder, destination)
+                    self.logger(f"Andreev's order moved back: {os.path.basename(order_folder)}")
+            return
+            
+        order_number = self.get_order_number(os.path.basename(order_folder))
+        ab1_files = self.file_dao.get_files_by_extension(order_folder, '.ab1')
+        
+        # Check order status
+        was_mseqed, has_braces, has_ab1_files = self.check_order_status(order_folder)
+        
+        # Process based on status
+        if not was_mseqed and not has_braces:
+            expected_count = self._get_expected_file_count(order_number)
+            
+            if len(ab1_files) == expected_count and has_ab1_files:
+                self.ui_automation.process_folder(order_folder)
+                self.logger(f"mSeq completed: {os.path.basename(order_folder)}")
+                
+                # If processing from IND Not Ready, move it back
+                if os.path.basename(os.path.dirname(order_folder)) == "IND Not Ready":
+                    destination = self.get_destination_for_order(order_folder, data_folder_path)
+                    self.file_dao.move_folder(order_folder, destination)
+            else:
+                # Move to Not Ready if incomplete
+                not_ready_path = os.path.join(os.path.dirname(data_folder_path), "IND Not Ready")
+                self.file_dao.create_folder_if_not_exists(not_ready_path)
+                self.file_dao.move_folder(order_folder, not_ready_path)
+                self.logger(f"Order moved to Not Ready: {os.path.basename(order_folder)}")
+        
+        # If already mSeqed but in IND Not Ready, move it back
+        elif was_mseqed and os.path.basename(os.path.dirname(order_folder)) == "IND Not Ready":
+            destination = self.get_destination_for_order(order_folder, data_folder_path)
+            self.file_dao.move_folder(order_folder, destination)
+            self.logger(f"Processed order moved back: {os.path.basename(order_folder)}")
+    
+    def process_pcr_folder(self, folder):
+        """Process a PCR folder"""
+        self.logger(f"Processing PCR folder: {os.path.basename(folder)}")
+        
+        # Check if already processed
+        was_mseqed, has_braces, has_ab1_files = self.check_order_status(folder)
+        
+        if not was_mseqed and not has_braces and has_ab1_files:
+            self.ui_automation.process_folder(folder)
+            self.logger(f"mSeq completed: {os.path.basename(folder)}")
+        else:
+            self.logger(f"mSeq NOT completed: {os.path.basename(folder)}")
+    
+    # Additional method for FolderProcessor class
+
+    def _get_expected_file_count(self, order_number):
+        """Get expected number of files for an order based on the order key"""
+        # Load the order key file
+        order_key = self.file_dao.load_order_key(self.config.KEY_FILE_PATH)
+        if order_key is None:
+            self.logger(f"Warning: Could not load order key file, unable to verify count for order {order_number}")
+            return 0
+        
+        # Count matching entries for this order number
+        count = 0
+        for row in order_key:
+            if str(row[0]) == str(order_number):
+                count += 1
+        
+        return count
+
+    def _get_order_sample_names(self, order_number):
+        """Get sample names for an order"""
+        order_key = self.file_dao.load_order_key(self.config.KEY_FILE_PATH)
+        if order_key is None:
+            return []
+        
+        sample_names = []
+        import numpy as np
+        
+        # Find indices of rows matching this order number
+        indices = np.where((order_key == str(order_number)))
+        
+        for i in range(len(indices[0])):
+            # Get the sample name and adjust characters
+            sample_name = self._adjust_abi_chars(order_key[indices[0][i], 3])
+            sample_names.append(sample_name)
+        
+        return sample_names
+
+    def _adjust_abi_chars(self, file_name):
+        """Adjust characters in file name to match ABI naming conventions"""
+        # Create translation table
+        translation_table = str.maketrans({
+            ' ': '',
+            '+': '&',
+            '*': '-',
+            '|': '-',
+            '/': '-',
+            '\\': '-',
+            ':': '-',
+            '"': '',
+            "'": '',
+            '<': '-',
+            '>': '-',
+            '?': '',
+            ',': ''
+        })
+        
+        # Apply translation
+        return file_name.translate(translation_table)
+
+################################################################################
+# File 4/8: ind_auto_mseq.py
+################################################################################
+
+# ind_auto_mseq.py
+import os
+import sys
+import tkinter.filedialog as filedialog
+import subprocess
+from config import MseqConfig
+from file_system_dao import FileSystemDAO
+from folder_processor import FolderProcessor
+from ui_automation import MseqAutomation
+import re
+
+# Check for 32-bit Python requirement
+if sys.maxsize > 2**32:
+    # Path to 32-bit Python
+    py32_path = MseqConfig.PYTHON32_PATH
+    
+    if os.path.exists(py32_path):
+        # Get the full path of the current script
+        script_path = os.path.abspath(__file__)
+        
+        # Re-run this script with 32-bit Python and exit current process
+        subprocess.run([py32_path, script_path])
+        sys.exit(0)
+    else:
+        print("32-bit Python not found at", py32_path)
+        print("Continuing with 64-bit Python (may cause issues)")
+
+def main():
+    config = MseqConfig()
+    file_dao = FileSystemDAO(config)
+    ui_automation = MseqAutomation(config)
+    processor = FolderProcessor(file_dao, ui_automation, config)
+    
+    # Run batch file to generate order key
+    try:
+        subprocess.run(config.BATCH_FILE_PATH, shell=True, check=True)
+    except subprocess.CalledProcessError:
+        print(f"Batch file {config.BATCH_FILE_PATH} failed to run")
+        return
+    
+    # Get folder selection from user
+    data_folder = filedialog.askdirectory(title="Select today's data folder to mseq orders")
+    data_folder = re.sub(r'/', '\\\\', data_folder)
+    
+    # Process BioI folders
+    bio_folders = file_dao.get_folders(data_folder, r'bioi-\d+')
+    immediate_orders = file_dao.get_folders(data_folder, r'bioi-\d+_.+_\d+')
+    pcr_folders = file_dao.get_folders(data_folder, r'fb-pcr\d+_\d+')
+    
+    for folder in bio_folders:
+        processor.process_bio_folder(folder)
+    
+    # Determine if we're processing the IND Not Ready folder
+    is_ind_not_ready = os.path.basename(data_folder) == config.IND_NOT_READY_FOLDER
+    
+    for folder in immediate_orders:
+        processor.process_order_folder(folder, data_folder)
+    
+    for folder in pcr_folders:
+        processor.process_pcr_folder(folder)
+    
+    print('')
+    print('ALL DONE')
+    
+    # Close mSeq application
+    ui_automation.close()
+
+if __name__ == "__main__":
+    main()
+
+################################################################################
+# File 5/8: logger.py
+################################################################################
+
+# logger.py
+import logging
+import os
+from datetime import datetime
+
+def setup_logger(name):
+    # Configure logger
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    
+    # Create logs directory if it doesn't exist
+    log_dir = "logs"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # File handler - logs to file
+    log_file = os.path.join(log_dir, f"{name}_{datetime.now().strftime('%Y%m%d')}.log")
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.INFO)
+    
+    # Console handler - logs to console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    
+    # Format
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    # Add handlers
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    return logger
+
+################################################################################
+# File 6/8: plate_auto_mseq.py
+################################################################################
+
+# plate_auto_mseq.py
+import os
+import sys
+import tkinter.filedialog as filedialog
+import subprocess
+from config import MseqConfig
+from file_system_dao import FileSystemDAO
+from folder_processor import FolderProcessor
+from ui_automation import MseqAutomation
+import re
+
+# Check for 32-bit Python requirement
+if sys.maxsize > 2**32:
+    # Path to 32-bit Python
+    py32_path = MseqConfig.PYTHON32_PATH
+    
+    if os.path.exists(py32_path):
+        # Get the full path of the current script
+        script_path = os.path.abspath(__file__)
+        
+        # Re-run this script with 32-bit Python and exit current process
+        subprocess.run([py32_path, script_path])
+        sys.exit(0)
+    else:
+        print("32-bit Python not found at", py32_path)
+        print("Continuing with 64-bit Python (may cause issues)")
+
+def main():
+    config = MseqConfig()
+    file_dao = FileSystemDAO(config)
+    ui_automation = MseqAutomation(config)
+    processor = FolderProcessor(file_dao, ui_automation, config)
+    
+    # Get folder selection from user
+    data_folder = filedialog.askdirectory(title="Select today's data folder to mseq plates")
+    data_folder = re.sub(r'/', '\\\\', data_folder)
+    
+    # Get all plate folders (starting with 'p')
+    plate_folders = file_dao.get_folders(data_folder, r'p\d+.+')
+    
+    # Process each plate folder
+    for folder in plate_folders:
+        print(folder)
+        processor.process_plate_folder(folder)
+    
+    # Close mSeq application
+    ui_automation.close()
+
+if __name__ == "__main__":
+    main()
+
+################################################################################
+# File 7/8: ui_automation.py
+################################################################################
+
+# ui_automation.py
+import os
+import time
+from pywinauto import Application, timings
+from pywinauto.keyboard import send_keys
+from pywinauto.findwindows import ElementNotFoundError, ElementAmbiguousError
+
+class MseqAutomation:
+    def __init__(self, config):
+        self.config = config
+        self.app = None
+        self.main_window = None
+        self.first_time_browsing = True
+    
+    def connect_or_start_mseq(self):
+        """Connect to existing mSeq or start a new instance"""
+        try:
+            self.app = Application(backend='win32').connect(title_re='Mseq*', timeout=1)
+        except (ElementNotFoundError, timings.TimeoutError):
+            try:
+                self.app = Application(backend='win32').connect(title_re='mSeq*', timeout=1)
+            except (ElementNotFoundError, timings.TimeoutError):
+                start_cmd = f'cmd /c "cd /d {self.config.MSEQ_PATH} && {self.config.MSEQ_EXECUTABLE}"'
+                self.app = Application(backend='win32').start(start_cmd, wait_for_idle=False) 
+                self.app.connect(title='mSeq', timeout=10)
+            except ElementAmbiguousError:
+                self.app = Application(backend='win32').connect(title_re='mSeq*', found_index=0, timeout=1)
+                app2 = Application(backend='win32').connect(title_re='mSeq*', found_index=1, timeout=1)
+                app2.kill()
+        except ElementAmbiguousError:
+            self.app = Application(backend='win32').connect(title_re='Mseq*', found_index=0, timeout=1)
+            app2 = Application(backend='win32').connect(title_re='Mseq*', found_index=1, timeout=1)
+            app2.kill()
+        
+        # Get the main window
+        if not self.app.window(title_re='mSeq*').exists():
+            self.main_window = self.app.window(title_re='Mseq*')
+        else:
+            self.main_window = self.app.window(title_re='mSeq*')
+            
+        return self.app, self.main_window
+    
+    def wait_for_dialog(self, dialog_type):
+        """Wait for a specific dialog to appear"""
+        timeout = self.config.TIMEOUTS.get(dialog_type, 5)
+        
+        if dialog_type == "browse_dialog":
+            return timings.wait_until(timeout=timeout, retry_interval=0.1, 
+                                     func=lambda: self.app.window(title='Browse For Folder').exists(), 
+                                     value=True)
+        elif dialog_type == "preferences":
+            return timings.wait_until(timeout=timeout, retry_interval=0.1, 
+                                     func=lambda: self.app.window(title='Mseq Preferences').exists(), 
+                                     value=True)
+        elif dialog_type == "copy_files":
+            return timings.wait_until(timeout=timeout, retry_interval=0.1,
+                                     func=lambda: self.app.window(title='Copy sequence files').exists(),
+                                     value=True)
+        elif dialog_type == "error_window":
+            return timings.wait_until(timeout=timeout, retry_interval=0.5,
+                                     func=lambda: self.app.window(title='File error').exists(),
+                                     value=True)
+        elif dialog_type == "call_bases":
+            return timings.wait_until(timeout=timeout, retry_interval=0.3,
+                                     func=lambda: self.app.window(title='Call bases?').exists(),
+                                     value=True)
+        elif dialog_type == "read_info":
+            return timings.wait_until(timeout=timeout, retry_interval=0.1,
+                                     func=lambda: self.app.window(title_re='Read information for*').exists(),
+                                     value=True)
+    
+    def is_process_complete(self, folder_path):
+        """Check if mSeq has finished processing the folder"""
+        if self.app.window(title="Low quality files skipped").exists():
+            return True
+        
+        # Check if all 5 text files have been created
+        count = 0
+        for item in os.listdir(folder_path):
+            if os.path.isfile(os.path.join(folder_path, item)):
+                for extension in self.config.TEXT_FILES:
+                    if item.endswith(extension):
+                        count += 1
+        return count == 5
+    
+    def navigate_folder_tree(self, dialog, path):
+        """Navigate the folder tree in a file dialog"""
+        dialog.set_focus()
+        tree_view = dialog.child_window(class_name="SysTreeView32")
+        
+        # Get the virtual folder name
+        import win32com.client
+        shell = win32com.client.Dispatch("Shell.Application")
+        namespace = shell.Namespace(0x11)  # CSIDL_DRIVES
+        virtual_folder = namespace.Title
+        
+        # Parse the path
+        if ":" in path:
+            # Path has a drive letter
+            parts = path.split("\\")
+            drive = parts[0]  # e.g., "P:"
+            folders = parts[1:] if len(parts) > 1 else []
+        else:
+            # Network path
+            parts = path.split("\\")
+            drive = "\\" + "\\".join(parts[:3])  # e.g., \\server\share
+            folders = parts[3:] if len(parts) > 3 else []
+        
+        try:
+            # Start from Desktop
+            desktop_item = tree_view.get_item('\\Desktop')
+            desktop_item.expand()
+            time.sleep(0.3)
+            
+            # Navigate to This PC
+            this_pc_item = None
+            for child in desktop_item.children():
+                if "PC" in child.text() or "Computer" in child.text() or virtual_folder in child.text():
+                    this_pc_item = child
+                    break
+            
+            if not this_pc_item:
+                raise ValueError(f"Could not find This PC or Computer in tree view")
+            
+            this_pc_item.expand()
+            time.sleep(0.3)
+            
+            # Navigate to the drive
+            drive_found = False
+            mapped_name = self.config.NETWORK_DRIVES.get(drive, None)
+            
+            for drive_item in this_pc_item.children():
+                drive_text = drive_item.text()
+                
+                # Check for both exact match and mapped name
+                if (drive == drive_text or 
+                    drive in drive_text or 
+                    (mapped_name and mapped_name in drive_text)):
+                    
+                    dialog.set_focus()
+                    drive_item.click_input()
+                    drive_found = True
+                    current_item = drive_item
+                    time.sleep(0.3)
+                    break
+            
+            if not drive_found:
+                raise ValueError(f"Could not find drive '{drive}' or '{mapped_name}' in tree view")
+            
+            # Navigate through subfolders
+            for folder in folders:
+                current_item.expand()
+                time.sleep(0.3)
+                
+                # Look for exact match first
+                folder_found = False
+                for child in current_item.children():
+                    if child.text() == folder:
+                        dialog.set_focus()
+                        child.click_input()
+                        folder_found = True
+                        current_item = child
+                        time.sleep(0.3)
+                        break
+                
+                if not folder_found:
+                    # Try partial match
+                    for child in current_item.children():
+                        if folder.lower() in child.text().lower():
+                            dialog.set_focus()
+                            child.click_input()
+                            folder_found = True
+                            current_item = child
+                            time.sleep(0.3)
+                            break
+                
+                if not folder_found:
+                    raise ValueError(f"Could not find folder '{folder}' or similar")
+            
+            # Final folder should now be selected
+            return True
+        
+        except Exception as e:
+            # Log the error but don't raise it - we want to continue even if navigation fails
+            print(f"Error during folder navigation: {e}")
+            return False
+    
+    def process_folder(self, folder_path):
+        """Process a folder with mSeq"""
+        try:
+            if not os.path.exists(folder_path):
+                print(f"Warning: Folder does not exist: {folder_path}")
+                return False
+                
+            # Check if there are any .ab1 files to process
+            ab1_files = [f for f in os.listdir(folder_path) if f.endswith('.ab1')]
+            if not ab1_files:
+                print(f"No .ab1 files found in {folder_path}, skipping processing")
+                return False
+        except Exception as e:
+            print(f"Error checking folder {folder_path}: {e}")
+            return False
+        
+        self.app, self.main_window = self.connect_or_start_mseq()
+        self.main_window.set_focus()
+        send_keys('^n')  # Ctrl+N for new project
+        
+        # Wait for and handle Browse For Folder dialog
+        self.wait_for_dialog("browse_dialog")
+        dialog_window = self.app.window(title='Browse For Folder')
+        
+        # Add a delay for the first browsing operation
+        if self.first_time_browsing:
+            self.first_time_browsing = False
+            time.sleep(0.5)  # mSeq needs time to initialize file browsing
+        else:
+            time.sleep(0.3)
+        
+        # Navigate to the target folder
+        self.navigate_folder_tree(dialog_window, folder_path)
+        ok_button = self.app.BrowseForFolder.child_window(title="OK", class_name="Button")
+        ok_button.click_input()
+        
+        # Handle mSeq Preferences dialog
+        self.wait_for_dialog("preferences")
+        pref_window = self.app.window(title='Mseq Preferences')
+        ok_button = pref_window.child_window(title="&OK", class_name="Button")
+        ok_button.click_input()
+        
+        # Handle Copy sequence files dialog
+        self.wait_for_dialog("copy_files")
+        copy_files_window = self.app.window(title='Copy sequence files')
+        shell_view = copy_files_window.child_window(title="ShellView", class_name="SHELLDLL_DefView")
+        list_view = shell_view.child_window(class_name="DirectUIHWND")
+        list_view.click_input()
+        send_keys('^a')  # Select all files
+        open_button = copy_files_window.child_window(title="&Open", class_name="Button")
+        open_button.click_input()
+        
+        # Handle File error dialog
+        self.wait_for_dialog("error_window")
+        error_window = self.app.window(title='File error')
+        error_ok_button = error_window.child_window(class_name="Button")
+        error_ok_button.click_input()
+        
+        # Handle Call bases dialog
+        self.wait_for_dialog("call_bases")
+        call_bases_window = self.app.window(title='Call bases?')
+        yes_button = call_bases_window.child_window(title="&Yes", class_name="Button")
+        yes_button.click_input()
+        
+    # Wait for processing to complete with graceful timeout handling
+        try:
+            timings.wait_until(
+                timeout=self.config.TIMEOUTS["process_completion"],
+                retry_interval=0.2,
+                func=lambda: self.is_process_complete(folder_path),
+                value=True
+            )
+        except timings.TimeoutError:
+            print(f"Warning: Timeout waiting for processing to complete for {folder_path}")
+            print("This may be normal if the folder has already been processed or has special files")
+        
+        # Handle Low quality files skipped dialog if it appears
+        if self.app.window(title="Low quality files skipped").exists():
+            low_quality_window = self.app.window(title='Low quality files skipped')
+            ok_button = low_quality_window.child_window(class_name="Button")
+            ok_button.click_input()
+        
+        # Handle Read information dialog
+        try:
+            self.wait_for_dialog("read_info")
+            if self.app.window(title_re='Read information for*').exists():
+                read_window = self.app.window(title_re='Read information for*')
+                read_window.close()
+        except timings.TimeoutError:
+            print(f"Read information dialog did not appear for {folder_path}")
+            # Continue processing
+        
+        return True
+    
+    def close(self):
+        """Close the mSeq application"""
+        if self.app:
+            self.app.kill()
+
+################################################################################
+# File 8/8: wildcard_auto_mseq.py
+################################################################################
+
+# wildcard_auto_mseq.py
+import os
+import tkinter.filedialog as filedialog
+from config import MseqConfig
+from file_system_dao import FileSystemDAO
+from folder_processor import FolderProcessor
+from ui_automation import MseqAutomation
+import re
+
+def main():
+    config = MseqConfig()
+    file_dao = FileSystemDAO(config)
+    ui_automation = MseqAutomation(config)
+    processor = FolderProcessor(file_dao, ui_automation, config)
+    
+    # Get folder selection from user
+    data_folder = filedialog.askdirectory(title="Select today's data folder to mseq folders")
+    data_folder = re.sub(r'/', '\\\\', data_folder)
+    
+    # Get all folders without filtering
+    all_folders = file_dao.get_folders(data_folder)
+    
+    # Process each folder
+    for folder in all_folders:
+        print(folder)
+        processor.process_wildcard_folder(folder)
+    
+    # Close mSeq application
+    ui_automation.close()
+
+if __name__ == "__main__":
+    main() (Scintilla)
+-  (Scintilla)
+-  (Scintilla)
+- Tab (SysTabControl32)
+-  (msctls_updown32)
+- Tab (SysTabControl32)
+-  (Scintilla)
+-  (splitterContainer)
+-  (wespliter)
+- Normal text file (msctls_statusbar32)
+-  (dockingManager)
+-  (wedockspliter)
+-  (wedockspliter)
+-  (nsdockspliter)
+-  (nsdockspliter)
+-  (ReBarWindow32)
+-  (ToolbarWindow32)
+-  (ReBarWindow32)
+-  (#32770)
+- [Error getting control details]
+- Find: (Static)
+-  (Edit)
+- < (Button)
+- > (Button)
+- Match &case (Button)
+- &Highlight all (Button)
+-  (Static)
