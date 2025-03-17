@@ -19,7 +19,7 @@ def main():
     print("UI Automation initialized")
     
     # Hard-coded test folder (replace with a path that exists on your system)
-    test_folder = r"C:\Users\rhomb\Documents"
+    test_folder = r"C:\Users\tyler\Documents"
     print(f"Using test folder: {test_folder}")
     
     # Directly try to open mSeq and navigate to the folder

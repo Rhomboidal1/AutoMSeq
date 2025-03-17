@@ -1,0 +1,232 @@
+mSeq UI Structure
+================
+
+Date/Time: 2025-03-17 11:58:43
+
+    Window: gr (isigraph)
+    Rectangle: (L75, T658, R771, B906)
+    No children
+
+    Window: Trace (Static)
+    Rectangle: (L17, T938, R77, B960)
+    No children
+
+    Window:  (ComboBox)
+    Rectangle: (L81, T936, R359, B959)
+    No children
+
+    Window: &Traces (Button)
+    Rectangle: (L561, T938, R643, B962)
+    No children
+
+    Window: &Contigs (Button)
+    Rectangle: (L561, T974, R639, B998)
+    No children
+
+    Window: View (Button)
+    Rectangle: (L545, T924, R673, B1008)
+    No children
+
+    Window: scrollv (ScrollBar)
+    Rectangle: (L771, T658, R787, B906)
+    No children
+
+    Window: scrollh (ScrollBar)
+    Rectangle: (L75, T906, R771, B922)
+    No children
+
+    Window: Quality  (Static)
+    Rectangle: (L23, T666, R75, B688)
+    No children
+
+    Window: Call  (Static)
+    Rectangle: (L27, T686, R73, B708)
+    No children
+
+    Window: S&earch (Button)
+    Rectangle: (L269, T974, R337, B998)
+    No children
+
+    Window:  (Edit)
+    Rectangle: (L101, T974, R251, B998)
+    No children
+
+    Window: &Reverse (Button)
+    Rectangle: (L381, T938, R481, B962)
+    No children
+
+    Window: &Autoscroll (Button)
+    Rectangle: (L381, T974, R465, B998)
+    No children
+
+  Window:  (AfxFrameOrView42)
+  Rectangle: (L3, T640, R797, B1018)
+  Children:
+
+  Window: gr (isigraph)
+  Rectangle: (L75, T658, R771, B906)
+  No children
+
+  Window: Trace (Static)
+  Rectangle: (L17, T938, R77, B960)
+  No children
+
+  Window:  (ComboBox)
+  Rectangle: (L81, T936, R359, B959)
+  No children
+
+  Window: &Traces (Button)
+  Rectangle: (L561, T938, R643, B962)
+  No children
+
+  Window: &Contigs (Button)
+  Rectangle: (L561, T974, R639, B998)
+  No children
+
+  Window: View (Button)
+  Rectangle: (L545, T924, R673, B1008)
+  No children
+
+  Window: scrollv (ScrollBar)
+  Rectangle: (L771, T658, R787, B906)
+  No children
+
+  Window: scrollh (ScrollBar)
+  Rectangle: (L75, T906, R771, B922)
+  No children
+
+  Window: Quality  (Static)
+  Rectangle: (L23, T666, R75, B688)
+  No children
+
+  Window: Call  (Static)
+  Rectangle: (L27, T686, R73, B708)
+  No children
+
+  Window: S&earch (Button)
+  Rectangle: (L269, T974, R337, B998)
+  No children
+
+  Window:  (Edit)
+  Rectangle: (L101, T974, R251, B998)
+  No children
+
+  Window: &Reverse (Button)
+  Rectangle: (L381, T938, R481, B962)
+  No children
+
+  Window: &Autoscroll (Button)
+  Rectangle: (L381, T974, R465, B998)
+  No children
+
+  Window:  (msctls_statusbar32)
+  Rectangle: (L3, T1018, R797, B1037)
+  No children
+
+  Window:  (ToolbarWindow32)
+  Rectangle: (L3, T616, R797, B640)
+  No children
+
+Window: mSeq (Afx:400000:b:10007:6:3800db3)
+Rectangle: (L0, T570, R800, B1040)
+Children:
+
+
+
+Browse For Folder Dialog
+======================
+
+  Window: Choose project directory (Static)
+  Rectangle: (L631, T226, R1289, B265)
+  No children
+
+  Window:  (Static)
+  Rectangle: (L631, T272, R919, B420)
+  No children
+
+    Window: Choose project directory (Static)
+    Rectangle: (L632, T273, R632, B273)
+    No children
+
+    Window: Tree View (SysTreeView32)
+    Rectangle: (L632, T273, R1288, B800)
+    No children
+
+  Window: Choose project directory (SHBrowseForFolder ShellNameSpace Control)
+  Rectangle: (L631, T272, R1289, B801)
+  Children:
+
+  Window: Choose project directory (Static)
+  Rectangle: (L632, T273, R632, B273)
+  No children
+
+  Window: Tree View (SysTreeView32)
+  Rectangle: (L632, T273, R1288, B800)
+  No children
+
+  Window: &Folder: (Static)
+  Rectangle: (L631, T784, R676, B797)
+  No children
+
+  Window: Documents (Edit)
+  Rectangle: (L684, T778, R1290, B801)
+  No children
+
+  Window: To view subfolders, click the symbol next to a folder. (Static)
+  Rectangle: (L631, T784, R1289, B807)
+  No children
+
+  Window: &Make New Folder (Button)
+  Rectangle: (L631, T814, R736, B837)
+  No children
+
+  Window: OK (Button)
+  Rectangle: (L1133, T814, R1208, B837)
+  No children
+
+  Window: Cancel (Button)
+  Rectangle: (L1214, T814, R1289, B837)
+  No children
+
+  Window:  (ScrollBar)
+  Rectangle: (L1287, T831, R1304, B848)
+  No children
+
+Window: Browse For Folder (#32770)
+Rectangle: (L608, T184, R1312, B856)
+Children:
+
+
+
+TreeView Structure
+=================
+
+Root items:
+ - Desktop
+   Children of Desktop:
+    - functionalbio
+    - OneDrive - functionalbio
+    - OneDrive - Personal
+    - Tyler Rudig
+    - This PC
+      Children of This PC:
+        - 3D Objects
+        - Desktop
+        - Documents
+        - Downloads
+        - Music
+        - Pictures
+        - Videos
+        - Windows (C:)
+        - GREEN (D:)
+        - Data (G:)
+        - Tyler (\\w2k16\users) (H:)
+        - ABI-Instrument (L:)
+        - data (\\Scorpio) (N:)
+        - ABISync (P:)
+        - data (\\abi-right) (R:)
+    - Libraries
+    - GREEN (D:)
+    - Network
+    - Control Panel
+    - Recycle Bin

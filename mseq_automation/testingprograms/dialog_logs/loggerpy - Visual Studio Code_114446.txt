@@ -1,7 +1,0 @@
-Window Title: logger.py - Visual Studio Code
-Window Class: Chrome_WidgetWin_1
-Window Rectangle: (L960, T0, R1920, B1032)
-
-Controls:
-- Chrome Legacy Window (Chrome_RenderWidgetHostHWND)
--  (Intermediate D3D Window)

@@ -1,5 +1,0 @@
-Window Title: PopupHost
-Window Class: Xaml_WindowedPopupClass
-Window Rectangle: (L0, T0, R0, B0)
-
-Controls:
