@@ -1,0 +1,276 @@
+=== Dialog Explorer Log ===
+Started: 2025-03-16 21:39:24
+
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:25
+================================================================================
+
+
+Error capturing window 'Abandoned Archive Demo
+steam://rungameid/1879090': {'title': 'Abandoned Archive Demo\nsteam://rungameid/1879090', 'top_level_only': True, 'backend': 'win32'}
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:31
+================================================================================
+
+Window Title: PopupHost
+Window Class: Xaml_WindowedPopupClass
+Window Rectangle: (L286, T963, R367, B1015)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+No TreeView controls found in this dialog.
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:41
+================================================================================
+
+Window Title: Home - File Explorer
+Window Class: CabinetWClass
+Window Rectangle: (L0, T189, R1493, B1020)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+00 | [No Text] | TITLE_BAR_SCAFFOLDING_WINDOW_CLASS | (L369, T189, R1484, B232) |  | 
+01 | Home | ShellTabWindowClass | (L9, T359, R1484, B1011) |  | 
+02 | [No Text] | DUIViewWndClassName | (L9, T359, R1484, B1011) |  | 
+03 | [No Text] | DirectUIHWND | (L9, T359, R1484, B1011) |  | 
+04 | [No Text] | CtrlNotifySink | (L12, T359, R204, B982) |  | 
+05 | Namespace Tree Control | NamespaceTreeControl | (L12, T359, R204, B982) |  | 
+06 | Namespace Tree Control | Static | (L12, T359, R12, B359) |  | 
+07 | Navigation Pane | SysTreeView32 | (L12, T359, R204, B982) |  | 
+08 | [No Text] | CtrlNotifySink | (L224, T374, R224, B374) |  | 
+09 | [No Text] | Button | (L224, T374, R224, B374) |  | 
+10 | [No Text] | CtrlNotifySink | (L224, T374, R224, B374) |  | 
+11 | [No Text] | Button | (L224, T374, R224, B374) |  | 
+12 | [No Text] | CtrlNotifySink | (L1024, T359, R1024, B359) |  | 
+13 | Shell Preview Extension Host | Shell Preview Extension Host | (L1024, T359, R1024, B359) |  | 
+14 | [No Text] | CtrlNotifySink | (L209, T359, R1020, B982) |  | 
+15 | ShellView | SHELLDLL_DefView | (L209, T359, R1020, B982) |  | 
+16 | [No Text] | FileExplorer_FolderViewIsland | (L209, T359, R1020, B982) |  | 
+17 | [No Text] | Microsoft.UI.Content.DesktopChildSiteBridge | (L209, T359, R1020, B982) |  | 
+18 | [No Text] | WorkerW | (L9, T359, R9, B359) |  | 
+19 | [No Text] | ReBarWindow32 | (L9, T359, R109, B359) |  | 
+20 | [No Text] | ToolbarWindow32 | (L9, T359, R9, B359) |  | 
+21 | [No Text] | msctls_statusbar32 | (L9, T330, R9, B359) |  | 
+22 | [No Text] | Microsoft.UI.Content.DesktopChildSiteBridge | (L9, T192, R1484, B359) |  | 
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+TreeView #1: Navigation Pane (Class: SysTreeView32)
+Rectangle: (L12, T359, R204, B982)
+Control ID: 100
+Getting children information...
+Root items count: 1
+  Root 1: Desktop
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:42
+================================================================================
+
+
+Error capturing window 'Google Earth Pro': {'title': 'Google Earth Pro', 'top_level_only': True, 'backend': 'win32'}
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:47
+================================================================================
+
+
+Error capturing window 'mseq_automation': {'title': 'mseq_automation', 'top_level_only': True, 'backend': 'win32'}
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:52
+================================================================================
+
+
+Error capturing window 'Jsoftware': {'title': 'Jsoftware', 'top_level_only': True, 'backend': 'win32'}
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:57
+================================================================================
+
+Window Title: mSeq
+Window Class: Afx:400000:b:10003:6:9710cd9
+Window Rectangle: (L0, T443, R1000, B1031)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+00 | [No Text] | AfxFrameOrView42 | (L4, T530, R997, B1003) |  | 
+01 | gr | isigraph | (L94, T553, R964, B863) |  | 
+02 | Trace | Static | (L21, T903, R96, B931) |  | 
+03 | [No Text] | ComboBox | (L101, T900, R449, B929) |  | 
+04 | &Traces | Button | (L701, T903, R804, B933) |  | 
+05 | &Contigs | Button | (L701, T948, R799, B978) |  | 
+06 | View | Button | (L681, T885, R841, B990) |  | 
+07 | s | ScrollBar | (L964, T553, R984, B863) |  | 
+08 | s | ScrollBar | (L94, T863, R964, B883) |  | 
+09 | Quality  | Static | (L29, T563, R94, B591) |  | 
+10 | Call  | Static | (L34, T588, R92, B616) |  | 
+11 | S&earch | Button | (L336, T948, R421, B978) |  | 
+12 | [No Text] | Edit | (L126, T948, R314, B978) |  | 
+13 | &Reverse | Button | (L476, T903, R601, B933) |  | 
+14 | &Autoscroll | Button | (L476, T948, R581, B978) |  | 
+15 | [No Text] | msctls_statusbar32 | (L4, T1003, R997, B1027) |  | 
+16 | [No Text] | ToolbarWindow32 | (L4, T500, R997, B530) |  | 
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+No TreeView controls found in this dialog.
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:57
+================================================================================
+
+Window Title: Mseq4 - File Explorer
+Window Class: CabinetWClass
+Window Rectangle: (L0, T189, R1493, B1020)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+00 | [No Text] | TITLE_BAR_SCAFFOLDING_WINDOW_CLASS | (L369, T189, R1484, B232) |  | 
+01 | Mseq4 | ShellTabWindowClass | (L9, T359, R1484, B1011) |  | 
+02 | [No Text] | DUIViewWndClassName | (L9, T359, R1484, B1011) |  | 
+03 | [No Text] | DirectUIHWND | (L9, T359, R1484, B1011) |  | 
+04 | [No Text] | CtrlNotifySink | (L12, T359, R204, B982) |  | 
+05 | Namespace Tree Control | NamespaceTreeControl | (L12, T359, R204, B982) |  | 
+06 | Namespace Tree Control | Static | (L12, T359, R12, B359) |  | 
+07 | Navigation Pane | SysTreeView32 | (L12, T359, R204, B982) |  | 
+08 | [No Text] | CtrlNotifySink | (L224, T374, R224, B374) |  | 
+09 | [No Text] | Button | (L224, T374, R224, B374) |  | 
+10 | [No Text] | CtrlNotifySink | (L224, T374, R224, B374) |  | 
+11 | [No Text] | Button | (L224, T374, R224, B374) |  | 
+12 | [No Text] | CtrlNotifySink | (L1024, T359, R1024, B359) |  | 
+13 | Shell Preview Extension Host | Shell Preview Extension Host | (L1024, T359, R1024, B359) |  | 
+14 | [No Text] | CtrlNotifySink | (L209, T359, R1020, B982) |  | 
+15 | ShellView | SHELLDLL_DefView | (L209, T359, R1020, B982) |  | 
+16 | [No Text] | DirectUIHWND | (L209, T359, R1020, B982) |  | 
+17 | [No Text] | CtrlNotifySink | (L209, T359, R209, B359) |  | 
+18 | [No Text] | ScrollBar | (L209, T359, R209, B359) |  | 
+19 | [No Text] | CtrlNotifySink | (L209, T359, R209, B359) |  | 
+20 | [No Text] | ScrollBar | (L209, T359, R209, B359) |  | 
+21 | [No Text] | WorkerW | (L9, T359, R9, B359) |  | 
+22 | [No Text] | ReBarWindow32 | (L9, T359, R109, B359) |  | 
+23 | [No Text] | ToolbarWindow32 | (L9, T359, R9, B359) |  | 
+24 | [No Text] | msctls_statusbar32 | (L9, T330, R9, B359) |  | 
+25 | [No Text] | Microsoft.UI.Content.DesktopChildSiteBridge | (L9, T192, R1484, B359) |  | 
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+TreeView #1: Navigation Pane (Class: SysTreeView32)
+Rectangle: (L12, T359, R204, B982)
+Control ID: 100
+Getting children information...
+Root items count: 1
+  Root 1: Desktop
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:58
+================================================================================
+
+Window Title: Browse For Folder
+Window Class: #32770
+Window Rectangle: (L496, T155, R1425, B865)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+00 | Choose project directory | Static | (L525, T208, R1396, B257) |  | 
+01 | [No Text] | Static | (L525, T265, R885, B450) |  | 
+02 | Choose project directory | SHBrowseForFolder ShellNameSpace Control | (L525, T265, R1396, B796) |  | 
+03 | Choose project directory | Static | (L526, T266, R526, B266) |  | 
+04 | Navigation Pane | SysTreeView32 | (L526, T266, R1395, B795) |  | 
+05 | &Folder: | Static | (L525, T775, R581, B791) |  | 
+06 | Documents | Edit | (L591, T768, R1397, B797) |  | 
+07 | To view subfolders, click the symbol next to a folder. | Static | (L525, T775, R1396, B804) |  | 
+08 | &Make New Folder | Button | (L525, T813, R656, B842) |  | 
+09 | OK | Button | (L1201, T813, R1295, B842) |  | 
+10 | Cancel | Button | (L1303, T813, R1397, B842) |  | 
+11 | [No Text] | ScrollBar | (L1394, T834, R1415, B855) |  | 
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+TreeView #1: Navigation Pane (Class: SysTreeView32)
+Rectangle: (L526, T266, R1395, B795)
+Control ID: 100
+Getting children information...
+Root items count: 1
+  Root 1: Desktop
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:39:59
+================================================================================
+
+
+Error capturing window 'Contains the files and folders that you have deleted.': {'title': 'Contains the files and folders that you have deleted.', 'top_level_only': True, 'backend': 'win32'}
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:40:05
+================================================================================
+
+Window Title: Date created: ?11/?19/?2024 ??18:30 PM
+Window Class: tooltips_class32
+
+Error capturing window 'Date created: ?9/?9/?2024 ??19:41 PM': {'title': 'Date created: ?9/?9/?2024 ??19:41 PM', 'top_level_only': True, 'backend': 'win32'}
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:40:15
+================================================================================
+
+Window Title: Project creation error
+Window Class: #32770
+Window Rectangle: (L309, T644, R692, B830)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+00 | OK | Button | (L575, T786, R669, B815) |  | 
+01 | [No Text] | Static | (L339, T705, R379, B745) |  | 
+02 | Existing Mseq project, will open instead. | Static | (L390, T718, R653, B737) |  | 
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+No TreeView controls found in this dialog.
+
+================================================================================
+DIALOG DETECTED: 2025-03-16 21:40:16
+================================================================================
+
+Window Title: Mseq - C:\Users\rhomb\Documents\
+Window Class: Afx:400000:b:10003:6:9710cd9
+Window Rectangle: (L0, T443, R1000, B1031)
+
+Controls:
+ID | Text | Class Name | Rectangle | Control Type | Automation ID
+--------------------------------------------------------------------------------
+00 | [No Text] | AfxFrameOrView42 | (L4, T530, R997, B1003) |  | 
+01 | gr | isigraph | (L94, T553, R964, B863) |  | 
+02 | Trace | Static | (L21, T903, R96, B931) |  | 
+03 | [No Text] | ComboBox | (L101, T900, R449, B929) |  | 
+04 | &Traces | Button | (L701, T903, R804, B933) |  | 
+05 | &Contigs | Button | (L701, T948, R799, B978) |  | 
+06 | View | Button | (L681, T885, R841, B990) |  | 
+07 | s | ScrollBar | (L964, T553, R984, B863) |  | 
+08 | s | ScrollBar | (L94, T863, R964, B883) |  | 
+09 | Quality  | Static | (L29, T563, R94, B591) |  | 
+10 | Call  | Static | (L34, T588, R92, B616) |  | 
+11 | S&earch | Button | (L336, T948, R421, B978) |  | 
+12 | [No Text] | Edit | (L126, T948, R314, B978) |  | 
+13 | &Reverse | Button | (L476, T903, R601, B933) |  | 
+14 | &Autoscroll | Button | (L476, T948, R581, B978) |  | 
+15 | [No Text] | msctls_statusbar32 | (L4, T1003, R997, B1027) |  | 
+16 | [No Text] | ToolbarWindow32 | (L4, T500, R997, B530) |  | 
+
+TreeView Controls:
+--------------------------------------------------------------------------------
+No TreeView controls found in this dialog.
+
+
+Dialog Explorer stopped: 2025-03-16 21:40:27

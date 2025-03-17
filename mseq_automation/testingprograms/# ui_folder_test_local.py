@@ -61,7 +61,7 @@ def test_local_folder_navigation():
         
         print(f"Found Desktop: {desktop_item.text()}")
         desktop_item.expand()
-        time.sleep(0.5)
+        time.sleep(2.0)
         
         # Look for This PC or Computer
         this_pc_item = None
@@ -77,7 +77,7 @@ def test_local_folder_navigation():
         
         print(f"Found This PC: {this_pc_item.text()}")
         this_pc_item.expand()
-        time.sleep(0.5)
+        time.sleep(2.0)
         
         # Navigate to the drive
         drive_found = False
@@ -90,7 +90,7 @@ def test_local_folder_navigation():
                 drive_item.click_input()
                 drive_found = True
                 current_item = drive_item
-                time.sleep(0.5)
+                time.sleep(2.0)
                 break
         
         if not drive_found:
@@ -101,7 +101,7 @@ def test_local_folder_navigation():
         for folder in folders:
             print(f"Looking for folder: {folder}")
             current_item.expand()
-            time.sleep(0.5)
+            time.sleep(2.0)
             
             children = list(current_item.children())
             print(f"Available folders:")
@@ -116,7 +116,7 @@ def test_local_folder_navigation():
                     child.click_input()
                     folder_found = True
                     current_item = child
-                    time.sleep(0.5)
+                    time.sleep(2.0)
                     break
             
             if not folder_found:
