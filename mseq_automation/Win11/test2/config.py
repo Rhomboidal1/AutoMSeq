@@ -1,0 +1,72 @@
+# config.py
+import getpass
+import os
+import platform
+
+class MseqConfig:
+    # Get current username for H drive mapping
+    USERNAME = getpass.getuser()
+    
+    # Paths
+    # Check for Python 32-bit, fallback to current Python interpreter
+    if os.path.exists(r"C:\Python312-32\python.exe"):
+        PYTHON32_PATH = r"C:\Python312-32\python.exe"
+    elif os.path.exists(r"C:\Python311-32\python.exe"):
+        PYTHON32_PATH = r"C:\Python311-32\python.exe"
+    elif os.path.exists(r"C:\Python310-32\python.exe"):
+        PYTHON32_PATH = r"C:\Python310-32\python.exe"
+    else:
+        # If no 32-bit Python is found, use the current interpreter
+        import sys
+        PYTHON32_PATH = sys.executable
+        
+    MSEQ_PATH = r"C:\DNA\Mseq4\bin"
+    MSEQ_EXECUTABLE = r"j.exe -jprofile mseq.ijl"
+    
+    # Network drives - these are mapped differently in file dialogs
+    NETWORK_DRIVES = {
+        "P:": r"ABISync (P:)",
+        "H:": f"{USERNAME} (\\\\w2k16\\users) (H:)"  # Dynamic user mapping
+    }
+    
+    # Timeouts for UI operations - extended for Windows 11
+    TIMEOUTS = {
+        "browse_dialog": 10,     # Extended for Windows 11
+        "preferences": 8,        # Extended for Windows 11
+        "copy_files": 8,         # Extended for Windows 11
+        "error_window": 20,
+        "call_bases": 15,        # Extended for Windows 11
+        "process_completion": 60, # Extended for Windows 11
+        "read_info": 8           # Extended for Windows 11
+    }
+    
+    # Special folders
+    IND_NOT_READY_FOLDER = "IND Not Ready"
+    
+    # Mseq artifacts
+    MSEQ_ARTIFACTS = {'chromat_dir', 'edit_dir', 'phd_dir', 'mseq4.ini'}
+    
+    # File types
+    TEXT_FILES = [
+        '.raw.qual.txt',
+        '.raw.seq.txt',
+        '.seq.info.txt',
+        '.seq.qual.txt',
+        '.seq.txt'
+    ]
+    
+    # Paths for data operations
+    KEY_FILE_PATH = r"P:\order_key.txt"
+    BATCH_FILE_PATH = r"P:\generate-data-sorting-key-file.bat"
+    REINJECT_FOLDER = r"P:\Data\Reinjects"
+    
+    # Windows version detection
+    @staticmethod
+    def is_windows_11():
+        """Detect if running on Windows 11"""
+        if platform.system() != 'Windows':
+            return False
+            
+        win_version = int(platform.version().split('.')[0])
+        win_build = int(platform.version().split('.')[2]) if len(platform.version().split('.')) > 2 else 0
+        return win_version >= 10 and win_build >= 22000
