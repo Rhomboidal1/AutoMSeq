@@ -18,7 +18,6 @@ class MseqAutomation:
         win_build = int(platform.version().split('.')[2]) if len(platform.version().split('.')) > 2 else 0
         self.is_win11 = win_version >= 10 and win_build >= 22000
     
-    
     def connect_or_start_mseq(self):
         """Connect to existing mSeq or start a new instance"""
         try:
@@ -196,350 +195,6 @@ class MseqAutomation:
                         count += 1
         return count == 5
     
-def navigate_folder_tree(self, dialog, path):
-    """Navigate the folder tree in a file dialog with better Windows 11 support"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    logger.info(f"Starting folder navigation to: {path}")
-    dialog.set_focus()
-    self._ensure_dialog_visible(dialog)
-    
-    # Get tree view using the robust method
-    tree_view = self._get_tree_view(dialog)
-    if not tree_view:
-        logger.error("Could not find TreeView control")
-        return False
-    
-    logger.info("TreeView control found")
-    
-    # Handle different path formats
-    if ":" in path:
-        # Path has a drive letter
-        parts = path.split("\\")
-        drive = parts[0]  # e.g., "P:"
-        folders = parts[1:] if len(parts) > 1 else []
-        logger.info(f"Path parsed: Drive={drive}, Folders={folders}")
-    else:
-        # Network path
-        parts = path.split("\\")
-        drive = "\\" + "\\".join(parts[:3])  # e.g., \\server\share
-        folders = parts[3:] if len(parts) > 3 else []
-        logger.info(f"Network path parsed: Share={drive}, Folders={folders}")
-    
-    try:
-        # Try to get all root items
-        root_items = list(tree_view.roots())
-        logger.info(f"Found {len(root_items)} root items in tree")
-        
-        # Log all root items to understand the hierarchy
-        for i, item in enumerate(root_items):
-            logger.info(f"Root item {i}: {item.text()}")
-            
-        # Windows 11 detection
-        is_win11 = hasattr(self, 'is_win11') and self.is_win11
-        if not is_win11:
-            # Try to detect Windows 11 by looking at the children
-            win11_indicators = ['Home', 'Gallery']
-            root_texts = [item.text() for item in root_items]
-            if any(indicator in root_texts for indicator in win11_indicators):
-                logger.info("Windows 11 detected from folder structure")
-                is_win11 = True
-        
-        # Look for Desktop item
-        desktop_item = None
-        for root_item in root_items:
-            if "Desktop" in root_item.text():
-                desktop_item = root_item
-                logger.info(f"Found Desktop: {root_item.text()}")
-                break
-
-        if not desktop_item:
-            logger.error("Could not find Desktop in tree view")
-            # Try the original approach as fallback
-            try:
-                desktop_item = tree_view.get_item('\\Desktop')
-                logger.info("Found Desktop using fallback method")
-            except Exception as e:
-                logger.warning(f"Could not find Desktop in tree view: {e}")
-        
-        # Windows 11: Try to directly go to This PC from root if possible
-        this_pc_item = None
-        current_item = None
-        goto_drive = True  # Flag to determine if we need to navigate to drive
-        
-        if is_win11:
-            logger.info("Using Windows 11 specific approach")
-            
-            # Try direct edit box input first
-            try:
-                edit_box = dialog.child_window(class_name="Edit")
-                if edit_box.exists():
-                    logger.info("Found edit box, attempting to set path directly")
-                    edit_box.set_edit_text(path)
-                    time.sleep(0.5)
-                    # Press tab to confirm the path
-                    from pywinauto.keyboard import send_keys
-                    send_keys("{TAB}")
-                    time.sleep(0.5)
-                    # If the path is valid, this should work
-                    logger.info("Set path via edit box, checking if valid")
-                    return True
-            except Exception as e:
-                logger.warning(f"Error using edit box: {e}")
-            
-            # If we found Desktop, expand it to look for all children
-            if desktop_item:
-                logger.info("Clicking and expanding Desktop")
-                dialog.set_focus()
-                desktop_item.click_input()
-                desktop_item.expand()
-                time.sleep(1.0)
-                
-                # Get all Desktop children
-                try:
-                    desktop_children = list(desktop_item.children())
-                    logger.info(f"Desktop has {len(desktop_children)} children")
-                    
-                    # Log all Desktop children to understand the hierarchy
-                    for i, child in enumerate(desktop_children):
-                        logger.info(f"Desktop child {i}: {child.text()}")
-                    
-                    # Looking for This PC (known to be the 12th item in Win11)
-                    if len(desktop_children) >= 12:
-                        candidate = desktop_children[11]  # 0-based indexing
-                        if "PC" in candidate.text():
-                            this_pc_item = candidate
-                            logger.info(f"Found This PC at position 11: {candidate.text()}")
-                    
-                    # If This PC not found at position 11, try looking by name
-                    if not this_pc_item:
-                        for child in desktop_children:
-                            if "PC" in child.text():
-                                this_pc_item = child
-                                logger.info(f"Found This PC by name: {child.text()}")
-                                break
-                    
-                    # If Documents is the target and we can find it directly
-                    if "Documents" in path and path.endswith("Documents"):
-                        for child in desktop_children:
-                            if "Document" in child.text():
-                                logger.info(f"Found Documents folder directly: {child.text()}")
-                                dialog.set_focus()
-                                child.click_input()
-                                time.sleep(0.5)
-                                logger.info("Target is Documents, navigation complete")
-                                return True
-                except Exception as e:
-                    logger.warning(f"Error examining Desktop children: {e}")
-        
-        # Standard Windows 10 flow, or continue Windows 11 flow if we found This PC
-        if desktop_item and (not is_win11 or this_pc_item):
-            if this_pc_item:
-                logger.info("Using This PC found in Desktop")
-            else:
-                # For Windows 10, find This PC in the normal way
-                logger.info("Looking for This PC in Desktop children (Win10 flow)")
-                try:
-                    desktop_children = list(desktop_item.children())
-                    for child in desktop_children:
-                        if any(pc_name in child.text() for pc_name in ["PC", "Computer"]):
-                            this_pc_item = child
-                            logger.info(f"Found This PC: {child.text()}")
-                            break
-                except Exception as e:
-                    logger.warning(f"Error finding This PC: {e}")
-            
-            if not this_pc_item:
-                logger.error("Could not find This PC in Desktop children")
-                return False
-            
-            logger.info("Clicking and expanding This PC")
-            dialog.set_focus()
-            this_pc_item.click_input()
-            this_pc_item.expand()
-            time.sleep(1.0)
-            
-            # Check what drives are available
-            try:
-                drive_children = list(this_pc_item.children())
-                logger.info(f"This PC has {len(drive_children)} children (drives)")
-                for i, drive_item in enumerate(drive_children):
-                    logger.info(f"Drive {i}: {drive_item.text()}")
-            except Exception as e:
-                logger.warning(f"Error enumerating drives: {e}")
-            
-            # Set current item to This PC
-            current_item = this_pc_item
-        
-        # If we don't have a current_item yet, we're in trouble
-        if not current_item:
-            logger.error("Failed to establish a starting point for navigation")
-            return False
-        
-        # Navigate to the drive
-        drive_found = False
-        mapped_name = self.config.NETWORK_DRIVES.get(drive, None)
-        logger.info(f"Looking for drive '{drive}' or mapped name '{mapped_name}'")
-        
-        try:
-            # Get current item's children
-            current_item_children = list(current_item.children())
-            
-            # First pass: look for exact match
-            for item in current_item_children:
-                drive_text = item.text()
-                if drive == drive_text or (mapped_name and mapped_name == drive_text):
-                    dialog.set_focus()
-                    item.click_input()
-                    drive_found = True
-                    current_item = item
-                    time.sleep(1.0)
-                    logger.info(f"Found exact drive match: {drive_text}")
-                    break
-            
-            # Second pass: look for partial match
-            if not drive_found:
-                for item in current_item_children:
-                    drive_text = item.text()
-                    if drive in drive_text or (mapped_name and mapped_name in drive_text):
-                        dialog.set_focus()
-                        item.click_input()
-                        drive_found = True
-                        current_item = item
-                        time.sleep(1.0)
-                        logger.info(f"Found partial drive match: {drive_text}")
-                        break
-        except Exception as e:
-            logger.error(f"Error finding drive: {e}")
-        
-        if not drive_found:
-            # Try scrolling and looking again
-            try:
-                self._scroll_if_needed(current_item)
-                logger.info("Scrolled to find more drives")
-                
-                # Second attempt after scrolling
-                current_item_children = list(current_item.children())
-                for item in current_item_children:
-                    drive_text = item.text()
-                    if (drive == drive_text or 
-                        drive in drive_text or 
-                        (mapped_name and mapped_name in drive_text)):
-                        
-                        dialog.set_focus()
-                        item.click_input()
-                        drive_found = True
-                        current_item = item
-                        time.sleep(1.0)
-                        logger.info(f"Found drive after scrolling: {drive_text}")
-                        break
-            except Exception as e:
-                logger.warning(f"Error while scrolling for drives: {e}")
-        
-        if not drive_found:
-            # Final attempt: try direct path input
-            try:
-                edit_box = dialog.child_window(class_name="Edit")
-                if edit_box.exists():
-                    logger.info("Using edit box to set path directly")
-                    edit_box.set_edit_text(path)
-                    time.sleep(0.5)
-                    from pywinauto.keyboard import send_keys
-                    send_keys("{TAB}")
-                    return True
-            except Exception as e:
-                logger.warning(f"Error using edit box fallback: {e}")
-            
-            logger.error(f"Could not find drive '{drive}' or '{mapped_name}' in tree view")
-            return False
-        
-        # Navigate through subfolders
-        logger.info(f"Starting subfolder navigation with {len(folders)} folders")
-        for i, folder in enumerate(folders):
-            logger.info(f"Navigating to folder {i+1}/{len(folders)}: {folder}")
-            
-            current_item.expand()
-            time.sleep(1.0)
-            
-            # Look for exact match first
-            folder_found = False
-            
-            try:
-                folder_children = list(current_item.children())
-                logger.info(f"Current folder has {len(folder_children)} children")
-                
-                # Log a few child items
-                for j in range(min(5, len(folder_children))):
-                    logger.info(f"Child {j}: {folder_children[j].text()}")
-                
-                # Look for exact match
-                for child in folder_children:
-                    if child.text() == folder:
-                        dialog.set_focus()
-                        child.click_input()
-                        folder_found = True
-                        current_item = child
-                        time.sleep(1.0)
-                        logger.info(f"Found exact match for {folder}")
-                        break
-            except Exception as e:
-                logger.warning(f"Error enumerating children: {e}")
-            
-            if not folder_found:
-                # Try scrolling
-                try:
-                    self._scroll_if_needed(current_item)
-                    logger.info("Scrolled to find more folders")
-                    
-                    # Try partial match after scrolling
-                    folder_children = list(current_item.children())
-                    for child in folder_children:
-                        if folder.lower() in child.text().lower():
-                            dialog.set_focus()
-                            child.click_input()
-                            folder_found = True
-                            current_item = child
-                            time.sleep(1.0)
-                            logger.info(f"Found partial match for {folder}: {child.text()}")
-                            break
-                except Exception as e:
-                    logger.warning(f"Error while scrolling: {e}")
-            
-            # Check if we found the folder
-            if folder_found:
-                # Small delay to ensure the UI updates
-                time.sleep(0.5)
-            else:
-                # Windows 11 fallback: try edit box
-                if is_win11:
-                    try:
-                        logger.info("Folder not found in tree, trying edit box")
-                        edit_box = dialog.child_window(class_name="Edit")
-                        if edit_box.exists():
-                            logger.info("Using edit box to set path directly")
-                            edit_box.set_edit_text(path)
-                            time.sleep(0.5)
-                            from pywinauto.keyboard import send_keys
-                            send_keys("{TAB}")
-                            return True
-                    except Exception as e:
-                        logger.warning(f"Error using edit box fallback: {e}")
-                
-                logger.error(f"Could not find folder '{folder}' or similar")
-                return False
-        
-        # Final folder should now be selected
-        logger.info("Navigation completed successfully")
-        return True
-        
-    except Exception as e:
-        # Log the error but don't raise it - we want to continue even if navigation fails
-        logger.error(f"Error during folder navigation: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        return False
-    
     def _get_browse_dialog(self):
         """Get the browse dialog window with Win10/Win11 compatibility"""
         # Try different possible titles
@@ -556,6 +211,350 @@ def navigate_folder_tree(self, dialog, path):
             return self.app.window(title_re='Browse.*Folder')
         except:
             return None
+    
+    def navigate_folder_tree(self, dialog, path):
+        """Navigate the folder tree in a file dialog with better Windows 11 support"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Starting folder navigation to: {path}")
+        dialog.set_focus()
+        self._ensure_dialog_visible(dialog)
+        
+        # Get tree view using the robust method
+        tree_view = self._get_tree_view(dialog)
+        if not tree_view:
+            logger.error("Could not find TreeView control")
+            return False
+        
+        logger.info("TreeView control found")
+        
+        # Handle different path formats
+        if ":" in path:
+            # Path has a drive letter
+            parts = path.split("\\")
+            drive = parts[0]  # e.g., "P:"
+            folders = parts[1:] if len(parts) > 1 else []
+            logger.info(f"Path parsed: Drive={drive}, Folders={folders}")
+        else:
+            # Network path
+            parts = path.split("\\")
+            drive = "\\" + "\\".join(parts[:3])  # e.g., \\server\share
+            folders = parts[3:] if len(parts) > 3 else []
+            logger.info(f"Network path parsed: Share={drive}, Folders={folders}")
+        
+        try:
+            # Try to get all root items
+            root_items = list(tree_view.roots())
+            logger.info(f"Found {len(root_items)} root items in tree")
+            
+            # Log all root items to understand the hierarchy
+            for i, item in enumerate(root_items):
+                logger.info(f"Root item {i}: {item.text()}")
+                
+            # Windows 11 detection
+            is_win11 = hasattr(self, 'is_win11') and self.is_win11
+            if not is_win11:
+                # Try to detect Windows 11 by looking at the children
+                win11_indicators = ['Home', 'Gallery']
+                root_texts = [item.text() for item in root_items]
+                if any(indicator in root_texts for indicator in win11_indicators):
+                    logger.info("Windows 11 detected from folder structure")
+                    is_win11 = True
+            
+            # Look for Desktop item
+            desktop_item = None
+            for root_item in root_items:
+                if "Desktop" in root_item.text():
+                    desktop_item = root_item
+                    logger.info(f"Found Desktop: {root_item.text()}")
+                    break
+    
+            if not desktop_item:
+                logger.error("Could not find Desktop in tree view")
+                # Try the original approach as fallback
+                try:
+                    desktop_item = tree_view.get_item('\\Desktop')
+                    logger.info("Found Desktop using fallback method")
+                except Exception as e:
+                    logger.warning(f"Could not find Desktop in tree view: {e}")
+            
+            # Windows 11: Try to directly go to This PC from root if possible
+            this_pc_item = None
+            current_item = None
+            goto_drive = True  # Flag to determine if we need to navigate to drive
+            
+            if is_win11:
+                logger.info("Using Windows 11 specific approach")
+                
+                # Try direct edit box input first
+                try:
+                    edit_box = dialog.child_window(class_name="Edit")
+                    if edit_box.exists():
+                        logger.info("Found edit box, attempting to set path directly")
+                        edit_box.set_edit_text(path)
+                        time.sleep(0.5)
+                        # Press tab to confirm the path
+                        from pywinauto.keyboard import send_keys
+                        send_keys("{TAB}")
+                        time.sleep(0.5)
+                        # If the path is valid, this should work
+                        logger.info("Set path via edit box, checking if valid")
+                        return True
+                except Exception as e:
+                    logger.warning(f"Error using edit box: {e}")
+                
+                # If we found Desktop, expand it to look for all children
+                if desktop_item:
+                    logger.info("Clicking and expanding Desktop")
+                    dialog.set_focus()
+                    desktop_item.click_input()
+                    desktop_item.expand()
+                    time.sleep(1.0)
+                    
+                    # Get all Desktop children
+                    try:
+                        desktop_children = list(desktop_item.children())
+                        logger.info(f"Desktop has {len(desktop_children)} children")
+                        
+                        # Log all Desktop children to understand the hierarchy
+                        for i, child in enumerate(desktop_children):
+                            logger.info(f"Desktop child {i}: {child.text()}")
+                        
+                        # Looking for This PC (known to be the 12th item in Win11)
+                        if len(desktop_children) >= 12:
+                            candidate = desktop_children[11]  # 0-based indexing
+                            if "PC" in candidate.text():
+                                this_pc_item = candidate
+                                logger.info(f"Found This PC at position 11: {candidate.text()}")
+                        
+                        # If This PC not found at position 11, try looking by name
+                        if not this_pc_item:
+                            for child in desktop_children:
+                                if "PC" in child.text():
+                                    this_pc_item = child
+                                    logger.info(f"Found This PC by name: {child.text()}")
+                                    break
+                        
+                        # If Documents is the target and we can find it directly
+                        if "Documents" in path and path.endswith("Documents"):
+                            for child in desktop_children:
+                                if "Document" in child.text():
+                                    logger.info(f"Found Documents folder directly: {child.text()}")
+                                    dialog.set_focus()
+                                    child.click_input()
+                                    time.sleep(0.5)
+                                    logger.info("Target is Documents, navigation complete")
+                                    return True
+                    except Exception as e:
+                        logger.warning(f"Error examining Desktop children: {e}")
+            
+            # Standard Windows 10 flow, or continue Windows 11 flow if we found This PC
+            if desktop_item and (not is_win11 or this_pc_item):
+                if this_pc_item:
+                    logger.info("Using This PC found in Desktop")
+                else:
+                    # For Windows 10, find This PC in the normal way
+                    logger.info("Looking for This PC in Desktop children (Win10 flow)")
+                    try:
+                        desktop_children = list(desktop_item.children())
+                        for child in desktop_children:
+                            if any(pc_name in child.text() for pc_name in ["PC", "Computer"]):
+                                this_pc_item = child
+                                logger.info(f"Found This PC: {child.text()}")
+                                break
+                    except Exception as e:
+                        logger.warning(f"Error finding This PC: {e}")
+                
+                if not this_pc_item:
+                    logger.error("Could not find This PC in Desktop children")
+                    return False
+                
+                logger.info("Clicking and expanding This PC")
+                dialog.set_focus()
+                this_pc_item.click_input()
+                this_pc_item.expand()
+                time.sleep(1.0)
+                
+                # Check what drives are available
+                try:
+                    drive_children = list(this_pc_item.children())
+                    logger.info(f"This PC has {len(drive_children)} children (drives)")
+                    for i, drive_item in enumerate(drive_children):
+                        logger.info(f"Drive {i}: {drive_item.text()}")
+                except Exception as e:
+                    logger.warning(f"Error enumerating drives: {e}")
+                
+                # Set current item to This PC
+                current_item = this_pc_item
+            
+            # If we don't have a current_item yet, we're in trouble
+            if not current_item:
+                logger.error("Failed to establish a starting point for navigation")
+                return False
+            
+            # Navigate to the drive
+            drive_found = False
+            mapped_name = self.config.NETWORK_DRIVES.get(drive, None)
+            logger.info(f"Looking for drive '{drive}' or mapped name '{mapped_name}'")
+            
+            try:
+                # Get current item's children
+                current_item_children = list(current_item.children())
+                
+                # First pass: look for exact match
+                for item in current_item_children:
+                    drive_text = item.text()
+                    if drive == drive_text or (mapped_name and mapped_name == drive_text):
+                        dialog.set_focus()
+                        item.click_input()
+                        drive_found = True
+                        current_item = item
+                        time.sleep(1.0)
+                        logger.info(f"Found exact drive match: {drive_text}")
+                        break
+                
+                # Second pass: look for partial match
+                if not drive_found:
+                    for item in current_item_children:
+                        drive_text = item.text()
+                        if drive in drive_text or (mapped_name and mapped_name in drive_text):
+                            dialog.set_focus()
+                            item.click_input()
+                            drive_found = True
+                            current_item = item
+                            time.sleep(1.0)
+                            logger.info(f"Found partial drive match: {drive_text}")
+                            break
+            except Exception as e:
+                logger.error(f"Error finding drive: {e}")
+            
+            if not drive_found:
+                # Try scrolling and looking again
+                try:
+                    self._scroll_if_needed(current_item)
+                    logger.info("Scrolled to find more drives")
+                    
+                    # Second attempt after scrolling
+                    current_item_children = list(current_item.children())
+                    for item in current_item_children:
+                        drive_text = item.text()
+                        if (drive == drive_text or 
+                            drive in drive_text or 
+                            (mapped_name and mapped_name in drive_text)):
+                            
+                            dialog.set_focus()
+                            item.click_input()
+                            drive_found = True
+                            current_item = item
+                            time.sleep(1.0)
+                            logger.info(f"Found drive after scrolling: {drive_text}")
+                            break
+                except Exception as e:
+                    logger.warning(f"Error while scrolling for drives: {e}")
+            
+            if not drive_found:
+                # Final attempt: try direct path input
+                try:
+                    edit_box = dialog.child_window(class_name="Edit")
+                    if edit_box.exists():
+                        logger.info("Using edit box to set path directly")
+                        edit_box.set_edit_text(path)
+                        time.sleep(0.5)
+                        from pywinauto.keyboard import send_keys
+                        send_keys("{TAB}")
+                        return True
+                except Exception as e:
+                    logger.warning(f"Error using edit box fallback: {e}")
+                
+                logger.error(f"Could not find drive '{drive}' or '{mapped_name}' in tree view")
+                return False
+            
+            # Navigate through subfolders
+            logger.info(f"Starting subfolder navigation with {len(folders)} folders")
+            for i, folder in enumerate(folders):
+                logger.info(f"Navigating to folder {i+1}/{len(folders)}: {folder}")
+                
+                current_item.expand()
+                time.sleep(1.0)
+                
+                # Look for exact match first
+                folder_found = False
+                
+                try:
+                    folder_children = list(current_item.children())
+                    logger.info(f"Current folder has {len(folder_children)} children")
+                    
+                    # Log a few child items
+                    for j in range(min(5, len(folder_children))):
+                        logger.info(f"Child {j}: {folder_children[j].text()}")
+                    
+                    # Look for exact match
+                    for child in folder_children:
+                        if child.text() == folder:
+                            dialog.set_focus()
+                            child.click_input()
+                            folder_found = True
+                            current_item = child
+                            time.sleep(1.0)
+                            logger.info(f"Found exact match for {folder}")
+                            break
+                except Exception as e:
+                    logger.warning(f"Error enumerating children: {e}")
+                
+                if not folder_found:
+                    # Try scrolling
+                    try:
+                        self._scroll_if_needed(current_item)
+                        logger.info("Scrolled to find more folders")
+                        
+                        # Try partial match after scrolling
+                        folder_children = list(current_item.children())
+                        for child in folder_children:
+                            if folder.lower() in child.text().lower():
+                                dialog.set_focus()
+                                child.click_input()
+                                folder_found = True
+                                current_item = child
+                                time.sleep(1.0)
+                                logger.info(f"Found partial match for {folder}: {child.text()}")
+                                break
+                    except Exception as e:
+                        logger.warning(f"Error while scrolling: {e}")
+                
+                # Check if we found the folder
+                if folder_found:
+                    # Small delay to ensure the UI updates
+                    time.sleep(0.5)
+                else:
+                    # Windows 11 fallback: try edit box
+                    if is_win11:
+                        try:
+                            logger.info("Folder not found in tree, trying edit box")
+                            edit_box = dialog.child_window(class_name="Edit")
+                            if edit_box.exists():
+                                logger.info("Using edit box to set path directly")
+                                edit_box.set_edit_text(path)
+                                time.sleep(0.5)
+                                from pywinauto.keyboard import send_keys
+                                send_keys("{TAB}")
+                                return True
+                        except Exception as e:
+                            logger.warning(f"Error using edit box fallback: {e}")
+                    
+                    logger.error(f"Could not find folder '{folder}' or similar")
+                    return False
+            
+            # Final folder should now be selected
+            logger.info("Navigation completed successfully")
+            return True
+            
+        except Exception as e:
+            # Log the error but don't raise it - we want to continue even if navigation fails
+            logger.error(f"Error during folder navigation: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return False
     
     def process_folder(self, folder_path):
         """Process a folder with mSeq"""
@@ -712,10 +711,10 @@ def navigate_folder_tree(self, dialog, path):
                         break
                 except:
                     pass
-            
+        
             if not error_window or not error_window.exists():
                 error_window = self.app.window(title_re='.*[Ee]rror.*')
-            
+        
             if error_window and error_window.exists():
                 # Try to find OK button
                 ok_button = None
@@ -738,8 +737,8 @@ def navigate_folder_tree(self, dialog, path):
                     error_window.set_focus()
                     send_keys('{ENTER}')
         except Exception as e:
-            print(f"Error with file error dialog: {e}")
-        
+                print(f"Error with file error dialog: {e}")
+
         # Handle Call bases dialog with improved handling
         try:
             self.wait_for_dialog("call_bases")
