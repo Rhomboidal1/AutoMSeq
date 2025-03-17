@@ -77,7 +77,7 @@ class MseqAutomation:
                                      func=lambda: self.app.window(title_re='Copy.*sequence files').exists(),
                                      value=True)
         elif dialog_type == "error_window":
-            return timings.wait_until(timeout=timeout, retry_interval=0.5,
+            return timings.wait_until(timeout=timeout, retry_interval=0.3,
                                      func=lambda: (self.app.window(title='File error').exists() or
                                                   self.app.window(title_re='.*[Ee]rror.*').exists()),
                                      value=True)
@@ -122,44 +122,57 @@ class MseqAutomation:
     
     def _get_tree_view(self, dialog):
         """Get tree view control regardless of Windows version"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info("Attempting to find tree view control")
+        
+        # Try to identify the tree view using only class name first (most reliable)
         try:
-            # Try different names used in Windows 10/11
-            for name in ["Tree View", "Navigation Pane"]:
-                try:
-                    return dialog.child_window(title=name, class_name="SysTreeView32")
-                except:
-                    pass
-            # Fallback to just class name if named control not found
-            return dialog.child_window(class_name="SysTreeView32")
+            # Windows 11 more commonly uses SysTreeView32 without a specific title
+            tree_control = dialog.child_window(class_name="SysTreeView32")
+            if tree_control.exists():
+                logger.info("Found tree view control by class name only")
+                return tree_control
         except Exception as e:
-            print(f"Error finding tree view: {e}")
-            return None
-    
-    def _scroll_if_needed(self, tree_item):
-        """Scroll to ensure item is visible"""
+            logger.warning(f"Could not find tree view by class name only: {e}")
+        
+        # Try different names used in Windows 10/11
+        for name in ["Navigation Pane", "Tree View"]:
+            try:
+                logger.info(f"Trying to find tree view with title: {name}")
+                tree_control = dialog.child_window(title=name, class_name="SysTreeView32")
+                if tree_control.exists():
+                    logger.info(f"Found tree view with title: {name}")
+                    return tree_control
+            except Exception as e:
+                logger.warning(f"Could not find tree view with title {name}: {e}")
+        
+        # Special handling for the SHBrowseForFolder control which contains the tree view
         try:
-            # Try different scrollbar naming conventions
-            parent = tree_item.parent()
-            
-            # Try general ScrollBar class
-            scrollbar = parent.child_window(class_name="ScrollBar")
-            if not scrollbar.exists():
-                # Try Win10 naming
-                for name in ["scrollv", "scrollh"]:
-                    scrollbar = parent.child_window(title=name)
-                    if scrollbar.exists():
-                        break
-                        
-            if not scrollbar.exists():
-                # Try Win11 naming
-                scrollbar = parent.child_window(title="s", class_name="ScrollBar")
-                
-            if scrollbar.exists():
-                scrollbar.scroll('pagedown')
-                time.sleep(0.5)
+            logger.info("Trying to find via SHBrowseForFolder control")
+            shell_control = dialog.child_window(class_name="SHBrowseForFolder ShellNameSpace Control")
+            if shell_control.exists():
+                logger.info("Found SHBrowseForFolder control, looking for tree view inside")
+                tree_control = shell_control.child_window(class_name="SysTreeView32")
+                if tree_control.exists():
+                    logger.info("Found tree view inside SHBrowseForFolder")
+                    return tree_control
         except Exception as e:
-            # Silently continue if scrolling fails
-            pass
+            logger.warning(f"Could not find tree view via SHBrowseForFolder: {e}")
+        
+        # Last resort - try to find ANY SysTreeView32 control in the dialog
+        try:
+            logger.info("Last resort: trying to find ANY SysTreeView32 control")
+            controls = dialog.children(class_name="SysTreeView32")
+            if controls and len(controls) > 0:
+                logger.info(f"Found {len(controls)} potential tree view controls, using first one")
+                return controls[0]
+        except Exception as e:
+            logger.error(f"Failed to find ANY tree view control: {e}")
+        
+        logger.error("Could not find tree view control in the dialog")
+        return None
     
     def _get_this_pc_item(self, desktop_item):
         """Get This PC node - handles Windows 10/11 differences"""

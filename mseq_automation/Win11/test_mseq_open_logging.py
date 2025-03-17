@@ -111,9 +111,19 @@ def main():
     # Get Documents folder using our enhanced function
     start_time = time.time()
     documents_path, method_used = get_documents_folder()
-    logger.info(f"Found Documents folder using method: {method_used}")
-    logger.info(f"Path discovery took {time.time() - start_time:.2f} seconds")
     
+    # OVERRIDE WITH CUSTOM FOLDER PATH HERE
+    custom_folder_path = r"P:\Data\Testing\Win11Test"  # Change this to your desired test folder
+    test_with_custom_folder = True  # Set to False to use the detected Documents folder
+    
+    if test_with_custom_folder:
+        logger.info(f"Overriding automatically detected path with custom folder: {custom_folder_path}")
+        documents_path = custom_folder_path
+        method_used = "Manual Override"
+    else:
+        logger.info(f"Found Documents folder using method: {method_used}")
+    
+    logger.info(f"Path discovery took {time.time() - start_time:.2f} seconds")
     logger.info(f"Using test folder: {documents_path}")
     
     # List folders in the documents path to verify access
