@@ -39,8 +39,27 @@ class MseqConfig:
         "process_completion": 60, # Extended for Windows 11
         "read_info": 8           # Extended for Windows 11
     }
+    CONTROLS = [
+        '_pGEM_T7Promoter', 
+        '_pGEM_SP6Promoter',
+        '_pGEM_M13F-20',
+        '_pGEM_M13R-27',
+        '_Water_T7Promoter',
+        '_Water_SP6Promoter',
+        '_Water_M13F-20',
+        '_Water_M13R-27'
+    ]
     
-    # Special folders
+    PLATE_CONTROLS = [
+        'pgem_m13f-20',
+        'water_m13f-20'
+    ]
+    
+    # Special folder names
+    CONTROLS_FOLDER = "Controls"
+    BLANK_FOLDER = "Blank"
+    ALT_INJECTIONS_FOLDER = "Alternate Injections"
+    ZIP_DUMP_FOLDER = "zip dump"
     IND_NOT_READY_FOLDER = "IND Not Ready"
     
     # Mseq artifacts
@@ -55,6 +74,17 @@ class MseqConfig:
         '.seq.txt'
     ]
     
+    # Excel validation styling
+    EXCEL_STYLES = {
+        "success": "00CC00",  # Green
+        "attention": "FF4747",  # Red
+        "resolved": "FFA500",  # Orange
+        "break": "DDD9C4"      # Light gray
+    }
+    
+    # Special case handling
+    ANDREEV_NAME = "andreev"  # Used to identify special handling for Andreev orders
+
     # Paths for data operations
     KEY_FILE_PATH = r"P:\order_key.txt"
     BATCH_FILE_PATH = r"P:\generate-data-sorting-key-file.bat"
