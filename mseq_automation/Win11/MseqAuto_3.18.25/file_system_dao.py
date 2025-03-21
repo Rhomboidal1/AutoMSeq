@@ -9,11 +9,39 @@ from zipfile import ZipFile, ZIP_DEFLATED
 class FileSystemDAO:
     def __init__(self, config):
         self.config = config
-    
+        self.directory_cache = {}
+
+        # Precompiled regex patterns
+        self.regex_patterns = {
+            'inumber': re.compile(r'bioi-(\d+)', re.IGNORECASE),
+            'pcr_number': re.compile(r'{pcr(\d+).+}', re.IGNORECASE),
+            'brace_content': re.compile(r'{.*?}'),
+            'bioi_folder': re.compile(r'.+bioi-\d+.+', re.IGNORECASE),
+            'ind_blank_file': re.compile(r'{\d+[A-H]}.ab1$', re.IGNORECASE),  # Individual blanks pattern
+            'plate_blank_file': re.compile(r'^\d{2}[A-H]__.ab1$', re.IGNORECASE)  # Plate blanks pattern
+            # Add other patterns as needed
+        }
+
+    def get_directory_contents(self, path, refresh=False):
+        """Get directory contents with caching"""
+        if path not in self.directory_cache or refresh:
+            if not os.path.exists(path):
+                self.directory_cache[path] = []
+                return []
+                
+            try:
+                contents = os.listdir(path)
+                self.directory_cache[path] = contents
+            except Exception as e:
+                print(f"Error reading directory {path}: {e}")
+                self.directory_cache[path] = []
+                
+        return self.directory_cache[path]
+
     def get_folders(self, path, pattern=None):
         """Get folders matching an optional regex pattern"""
         folders = []
-        for item in os.listdir(path):
+        for item in self.get_directory_contents(path):
             full_path = os.path.join(path, item)
             if os.path.isdir(full_path):
                 if pattern is None or re.search(pattern, item.lower()):
@@ -23,14 +51,14 @@ class FileSystemDAO:
     def get_files_by_extension(self, folder, extension):
         """Get all files with specified extension in a folder"""
         files = []
-        for item in os.listdir(folder):
+        for item in self.get_directory_contents(folder):
             if item.endswith(extension):
                 files.append(os.path.join(folder, item))
         return files
     
     def contains_file_type(self, folder, extension):
         """Check if folder contains files with specified extension"""
-        for item in os.listdir(folder):
+        for item in self.get_directory_contents(folder):
             if item.endswith(extension):
                 return True
         return False
@@ -83,7 +111,7 @@ class FileSystemDAO:
     def count_files_by_extensions(self, folder, extensions):
         """Count files with specific extensions in a folder"""
         counts = {ext: 0 for ext in extensions}
-        for item in os.listdir(folder):
+        for item in self.get_directory_contents(folder):
             file_path = os.path.join(folder, item)
             if os.path.isfile(file_path):
                 for ext in extensions:
@@ -125,6 +153,29 @@ class FileSystemDAO:
         # Apply translation
         return file_name.translate(translation_table)
     
+    def normalize_filename(self, file_name, remove_extension=True, logger=None):
+        """Normalize filename with optional logging"""
+        # Step 1: Adjust characters
+        adjusted_name = self.adjust_abi_chars(file_name)
+        
+        # Step 2: Remove extension if needed
+        if remove_extension and '.' in adjusted_name:
+            name_without_ext = adjusted_name[:adjusted_name.rfind('.')]
+        else:
+            name_without_ext = adjusted_name
+        
+        # Step 3: Remove suffixes
+        neutralized_name = self.neutralize_suffixes(name_without_ext)
+        
+        # Step 4: Remove brace content
+        cleaned_name = re.sub(r'{.*?}', '', neutralized_name)
+        
+        # Only log if a logger is provided
+        if logger:
+            logger(f"Normalized '{file_name}' to '{cleaned_name}'")
+        
+        return cleaned_name
+    
     def neutralize_suffixes(self, file_name):
         """Remove suffixes like _Premixed and _RTI"""
         new_file_name = file_name
@@ -141,7 +192,7 @@ class FileSystemDAO:
     # Zip operations
     def check_for_zip(self, folder_path):
         """Check if folder contains any zip files"""
-        for item in os.listdir(folder_path):
+        for item in self.get_directory_contents(folder_path):
             file_path = os.path.join(folder_path, item)
             if os.path.isfile(file_path) and file_path.endswith(self.config.ZIP_EXTENSION):
                 return True
@@ -150,7 +201,7 @@ class FileSystemDAO:
     def zip_files(self, source_folder, zip_path, file_extensions=None, exclude_extensions=None):
         """Create a zip file from files in source_folder matching extensions"""
         with ZipFile(zip_path, 'w') as zip_file:
-            for item in os.listdir(source_folder):
+            for item in self.get_directory_contents(source_folder):
                 file_path = os.path.join(source_folder, item)
                 if not os.path.isfile(file_path):
                     continue
@@ -185,12 +236,16 @@ class FileSystemDAO:
     
     # PCR folder operations
     def get_pcr_number(self, file_name):
-        """Extract PCR number from file name"""
-        if re.search('{pcr\\d+.+}', file_name.lower()):
-            pcr = re.search("{pcr\\d+.+}", file_name.lower()).group().upper()
-            pcr = re.search("PCR\\d+", pcr).group()
+        """Extract PCR number from filename using specific regex pattern
+        This uses the same pattern as the legacy GetPCRNumber function
+        """
+        # Use the exact regex pattern from the legacy script
+        if re.search(r'{pcr\d+.+}', file_name.lower()):
+            pcr = re.search(r"{pcr\d+.+}", file_name.lower()).group().upper()  # Get the bracket information {PCR123_exp1}
+            pcr = re.search(r"PCR\d+", pcr).group()  # Then get only PCR123 out of that string
             return pcr
-        return ''
+        else:
+            return ''
     
     def is_control_file(self, file_name, control_list):
         """Check if file is a control sample"""
@@ -199,9 +254,21 @@ class FileSystemDAO:
         return clean_name.lower() in [control.lower() for control in control_list]
     
     def is_blank_file(self, file_name):
-        """Check if file is a blank sample (typically just 9 chars like '01A__.ab1')"""
-        name_without_ext = os.path.splitext(file_name)[0]
-        return len(name_without_ext) <= 5 and name_without_ext.endswith('__')
+        """
+        Check if file is a blank sample
+        Handles two formats:
+        1. Individual sequencing blanks: {07H}.ab1, {11F}.ab1
+        2. Plate sequencing blanks: 01A__.ab1, 02B__.ab1
+        """
+        # Check for individual sequencing blanks pattern {[digits][letter]}.ab1
+        if self.regex_patterns['ind_blank_file'].match(file_name):
+            return True
+            
+        # Check for plate sequencing blanks pattern [digits][letter]__.ab1
+        if self.regex_patterns['plate_blank_file'].match(file_name):
+            return True
+            
+        return False
     
     def get_most_recent_inumber(self, path):
         """Find the most recent I number based on folder modification times"""
@@ -268,11 +335,10 @@ class FileSystemDAO:
         return [file_info[0] for file_info in sorted_files]
 
     def get_inumber_from_name(self, name):
-        """Extract I number from a name (folder or file)"""
-        if re.search('bioi-\\d+', str(name).lower()):
-            bio_string = re.search('bioi-\\d+', str(name).lower()).group(0)
-            inumber = re.search('\\d+', bio_string).group(0)
-            return inumber
+        """Extract I number from a name using precompiled regex"""
+        match = self.regex_patterns['inumber'].search(str(name).lower())
+        if match:
+            return match.group(1)  # Return just the number
         return None
 
     def get_inumbers_greater_than(self, files, lower_inum):

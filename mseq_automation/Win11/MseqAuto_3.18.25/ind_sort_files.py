@@ -117,6 +117,9 @@ def main():
     
     logger.info(f"Using folder: {data_folder}")
     
+    # Store the selected folder in the processor for later reference
+    processor.current_data_folder = data_folder
+
     # Get today's I numbers and BioI folders
     i_numbers, bio_folders = processor.get_todays_inumbers_from_folder(data_folder)
     logger.info(f"Found {len(i_numbers)} I numbers and {len(bio_folders)} BioI folders")
